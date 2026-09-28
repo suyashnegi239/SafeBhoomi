@@ -6,7 +6,6 @@ import {
   RefreshCw, Navigation, Wifi, WifiOff
 } from "lucide-react";
 import "./index.css";
-import SafeBhoomiLiveMap from "./SafeBhoomiLiveMap";
 
 const districts = [
   ["Chamoli",55,"HIGH",73],["Rudraprayag",55,"HIGH",73],
@@ -263,12 +262,26 @@ const analyzeWithAI = async () => {
         )}
 
         {page === "Live Map" && (
-          <SafeBhoomiLiveMap
-            onDistrictSelect={(districtName) => {
-              setSelected(districtName);
-              setPage("Area Risk");
-            }}
-          />
+          <Page title="Live Hazard Map" subtitle="Interactive Uttarakhand risk intelligence">
+            <div className="mapBox">
+              <div className="mapGrid"></div>
+              {districts.map((d,i)=>(
+                <button
+                  key={d[0]}
+                  className={"mapPoint " + (d[1]>=50?"danger":d[1]>=30?"moderate":"safe")}
+                  style={{left:`${12+(i%7)*12}%`,top:`${22+Math.floor(i/7)*42}%`}}
+                  onClick={()=>{setSelected(d[0]);setPage("Area Risk")}}
+                  title={d[0]}
+                >
+                  <span></span>{d[0]}
+                </button>
+              ))}
+              <div className="mapLegend">
+                <b>RISK ZONES</b>
+                <span>● HIGH</span><span>● MODERATE</span><span>● LOW</span>
+              </div>
+            </div>
+          </Page>
         )}
 
         {page === "Districts" && (
