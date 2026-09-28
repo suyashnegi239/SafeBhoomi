@@ -1,0 +1,16 @@
+services:
+
+  - type: web
+    name: safebhoomi
+    runtime: python
+    rootDir: .
+    buildCommand: |
+      pip install -r backend/requirements.txt
+      cd frontend_react
+      npm install
+      npm run build
+    startCommand: |
+      uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11

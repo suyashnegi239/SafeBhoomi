@@ -1,0 +1,23 @@
+{
+  "IMD": {
+    "organization": "India Meteorological Department",
+    "type": "Weather / rainfall / humidity",
+    "status": "OFFICIAL",
+    "url": "https://mausam.imd.gov.in/",
+    "notes": "Official meteorological observations."
+  },
+  "NRSC_ISRO_LANDSLIDE": {
+    "organization": "National Remote Sensing Centre / ISRO",
+    "type": "Historical landslide inventory",
+    "status": "OFFICIAL",
+    "url": "https://www.nrsc.gov.in/nrscnew/resources_atlas_landslide.php",
+    "notes": "Landslide Atlas, 1998-2022."
+  },
+  "BHUVAN": {
+    "organization": "NRSC / ISRO",
+    "type": "Geospatial / terrain / landslide layers",
+    "status": "OFFICIAL",
+    "url": "https://bhuvan-app1.nrsc.gov.in/",
+    "notes": "ISRO geospatial portal."
+  }
+}

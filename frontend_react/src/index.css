@@ -1,0 +1,170 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+*{box-sizing:border-box}
+body{margin:0;background:#07100e;color:#edf5f1;font-family:Inter,Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;background:radial-gradient(circle at 75% 5%,#12372e 0,#07100e 38%,#050908 100%)}
+.topbar{height:76px;padding:0 5%;display:flex;align-items:center;gap:24px;border-bottom:1px solid #20332d;background:#08120f}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+.brandMark{width:38px;height:38px;border:1px solid #6ec7a5;border-radius:10px;display:grid;place-items:center;color:#8ee4bd;font-weight:800;font-size:21px}
+.brandName{font-size:19px;font-weight:800;letter-spacing:1px}
+.brandName span{color:#6ed0a5}
+.brandSub{font-size:8px;color:#759086;letter-spacing:2px;margin-top:3px}
+.live{font-size:10px;letter-spacing:1px;color:#9fb5ac;display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;background:#52d99a;border-radius:50%;box-shadow:0 0 10px #52d99a}
+.dot.off{background:#e2a74f}
+.emergency{background:#8b3028;border:1px solid #bc594d;color:white;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700}
+.menu{display:none;background:none;border:0;color:white}
+.nav{height:54px;padding:0 5%;display:flex;align-items:center;gap:5px;border-bottom:1px solid #182923;background:#09130f;overflow:auto}
+.navItem{white-space:nowrap;background:none;border:0;color:#82968e;padding:10px 13px;border-radius:7px;display:flex;gap:7px;align-items:center;font-size:11px}
+.navItem:hover,.navItem.active{color:#b9f2d7;background:#132a22}
+main{max-width:1400px;margin:auto;padding:48px 5% 70px}
+.hero{min-height:290px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #20332d;padding-bottom:40px}
+.eyebrow,.sectionTitle span{font-size:10px;letter-spacing:2px;color:#68c49e;font-weight:700}
+h1{font-size:clamp(38px,5vw,70px);line-height:1.02;margin:15px 0 20px;letter-spacing:-3px}
+h1 span{color:#79cdaa}
+.hero p{max-width:620px;color:#8ea59c;line-height:1.7}
+.heroStatus{width:190px;height:190px;border:1px solid #315548;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#73d3a8;background:#0b1a15}
+.heroStatus strong{font-size:44px}.heroStatus small{font-size:9px;letter-spacing:1.5px;color:#789188}
+.sectionTitle{display:flex;justify-content:space-between;align-items:end;margin:42px 0 20px}
+.sectionTitle h2{font-size:25px;margin:7px 0}.sectionTitle p{color:#83968e;margin:0;font-size:13px}
+.refresh{background:#101f1a;color:#9fc2b3;border:1px solid #284238;border-radius:7px;padding:9px 12px;display:flex;gap:6px}
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.metric,.panel,.districtCard,.riskMain,.routeBox,.simulation,.aiBox{background:#0b1713;border:1px solid #20352d;border-radius:10px}
+.metric{padding:21px}.metric strong{display:block;font-size:32px;color:#b9efd8}.metric b{display:block;font-size:10px;margin-top:8px}.metric small{display:block;color:#687d74;font-size:8px;margin-top:5px;letter-spacing:1px}
+.grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:15px;margin-top:15px}.panel{padding:22px}.panel h3{margin:0 0 18px;font-size:14px}
+.priority{display:grid;grid-template-columns:1fr 70px 80px;align-items:center;padding:14px 0;border-top:1px solid #1c2b26}.priority div{display:flex;flex-direction:column}.priority small{color:#687e75;margin-top:4px}.priority strong{font-size:19px}.high{font-size:9px;color:#ef9c86;background:#3a201c;padding:5px 8px;border-radius:4px;text-align:center}
+.module{width:100%;display:flex;gap:14px;text-align:left;background:none;border:0;border-top:1px solid #1c2b26;color:white;padding:17px 0}.module svg{color:#6acda3}.module b,.module small{display:block}.module small{color:#71867e;margin-top:4px}
+.mapBox{height:530px;border:1px solid #29463a;border-radius:12px;position:relative;overflow:hidden;background:#0a1a16}
+.mapGrid{position:absolute;inset:0;background-image:linear-gradient(#17382e 1px,transparent 1px),linear-gradient(90deg,#17382e 1px,transparent 1px);background-size:45px 45px;opacity:.45}
+.mapPoint{position:absolute;border:0;background:none;color:#b8ccc4;font-size:9px;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px}.mapPoint span{width:13px;height:13px;border-radius:50%;display:block;border:3px solid #0a1a16}.danger span{background:#e56e55}.moderate span{background:#e0ad58}.safe span{background:#52bf91}.mapLegend{position:absolute;bottom:18px;left:18px;background:#08130fdd;border:1px solid #294238;padding:12px;display:flex;gap:14px;font-size:9px}.mapLegend span:nth-child(2){color:#e77b63}.mapLegend span:nth-child(3){color:#e0ad58}.mapLegend span:nth-child(4){color:#59c99b}
+.districtGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.districtCard{padding:18px;text-align:left;color:white;transition:.2s}.districtCard:hover{transform:translateY(-3px);border-color:#4b9275}.districtCard b{display:block;margin:12px 0 8px}.districtCard span{font-size:9px;color:#e2a16f}.districtCard strong{display:block;font-size:28px;margin-top:8px}.districtCard small{color:#72867d}.mountainIcon{color:#67c69e}
+.select{background:#0c1915;color:white;border:1px solid #2b493d;padding:12px;border-radius:7px;min-width:250px}.riskMain{margin-top:15px;padding:25px;display:grid;grid-template-columns:300px 1fr;gap:30px}.riskScore{display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid #20352d}.riskScore small{color:#71867d;letter-spacing:2px}.riskScore strong{font-size:72px;color:#e0b06a}.riskScore span{font-size:11px;color:#e8a281}.factor{display:flex;justify-content:space-between;padding:19px 0;border-bottom:1px solid #1c2b26}.factor span{color:#849990}.factor b{color:#bcebd8}
+.alertList{display:grid;gap:12px}.alert{display:flex;gap:17px;padding:20px;background:#0b1713;border:1px solid #3c3026;border-radius:10px}.alert svg{color:#e47e61}.alert div>*{display:block}.alert strong{font-size:10px;color:#e5a66f;margin:5px 0}.alert small{color:#80938b}
+.routeBox,.aiBox{padding:25px;display:grid;gap:13px}.routeBox input,.aiBox textarea{background:#07110e;border:1px solid #294238;color:white;padding:14px;border-radius:7px}.aiBox textarea{min-height:130px;resize:vertical}.primary,.run{background:#5dbd93;color:#06100c;border:0;border-radius:7px;padding:13px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px}.routeResult{margin-top:8px;border-top:1px solid #20352d;padding-top:18px;display:flex;gap:15px;color:#6dcba2}.routeResult b,.routeResult small{display:block}.routeResult small{color:#7e938a;margin-top:5px}
+.simulation{padding:25px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.sim{background:#0a1511;color:#9caea6;border:1px solid #284238;border-radius:8px;padding:20px 10px;display:grid;gap:9px;justify-items:center}.sim.active{border-color:#63c69e;background:#11281f;color:#bff1dc}.run{grid-column:1/-1;margin-top:10px}
+.aiBox{max-width:850px}.aiBox h3{margin:0}.aiBox p{color:#83968e}
+footer{border-top:1px solid #1c2c26;padding:22px 5%;display:flex;justify-content:space-between;color:#61766d;font-size:9px;letter-spacing:1px}footer span:last-child{display:flex;gap:6px;align-items:center}
+@media(max-width:900px){.metrics{grid-template-columns:repeat(2,1fr)}.grid2,.riskMain{grid-template-columns:1fr}.districtGrid{grid-template-columns:repeat(2,1fr)}.riskScore{border-right:0;border-bottom:1px solid #20352d;padding-bottom:25px}.simulation{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.topbar{padding:0 18px}.live{display:none}.menu{display:block}.nav{display:none;height:auto;padding:10px 18px;flex-wrap:wrap}.nav.open{display:flex}.hero{display:block}.heroStatus{margin:30px auto 0;width:140px;height:140px}.heroStatus strong{font-size:32px}main{padding:30px 18px}.metrics,.districtGrid{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.simulation{grid-template-columns:1fr}.emergency{padding:9px}.brandName{font-size:15px}h1{letter-spacing:-2px}.sectionTitle{align-items:flex-start;gap:15px}.mapBox{height:430px}.mapPoint{font-size:7px}}
+
+
+/* =========================================================
+   SAFEBHOOMI — AREA RISK INTELLIGENCE
+   ========================================================= */
+
+.riskControl {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.riskControl .select {
+  min-width: 220px;
+}
+
+.primary:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+
+.riskError {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 90, 90, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 70, 70, 0.08);
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.riskDrivers {
+  margin-top: 26px;
+}
+
+.driverGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.driverCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.035);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.driverCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.driverCard span {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dataStatus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.dataStatus span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.07);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+.emptyRisk {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.025);
+  padding: 30px;
+}
+
+.emptyRisk h3 {
+  margin: 14px 0 6px;
+}
+
+.emptyRisk p {
+  max-width: 430px;
+  opacity: 0.6;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .driverGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .riskControl {
+    align-items: stretch;
+  }
+
+  .riskControl .select,
+  .riskControl .primary {
+    width: 100%;
+  }
+}
