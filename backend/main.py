@@ -50,7 +50,7 @@ app.include_router(risk_router)
 # ---------------------------------------------------------
 # REACT PRODUCTION BUILD
 # ---------------------------------------------------------
-FRONTEND_DIST = Path("/content/landslide_project/frontend_react/dist")
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_react" / "dist"
 
 if FRONTEND_DIST.exists():
     app.mount(
