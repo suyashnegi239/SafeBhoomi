@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from .risk_api import router as risk_router
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -27,6 +28,15 @@ app.add_middleware(
 
 @app.get("/")
 def root():
+    frontend_index = (
+        Path(__file__).resolve().parent.parent
+        / "frontend_react"
+        / "dist"
+        / "index.html"
+    )
+
+    if frontend_index.is_file():
+        return FileResponse(str(frontend_index))
 
     return {
         "application": "SafeBhoomi",
