@@ -34,6 +34,56 @@ function App() {
   const [online,setOnline] = useState(navigator.onLine);
   const [selected,setSelected] = useState("Chamoli");
   const [simulation,setSimulation] = useState("Heavy Rain");
+const [aiQuestion, setAiQuestion] = useState("");
+const [aiAnswer, setAiAnswer] = useState("");
+const [aiLoading, setAiLoading] = useState(false);
+const [aiError, setAiError] = useState("");
+
+const analyzeWithAI = async () => {
+  if (!aiQuestion.trim()) {
+    setAiError("Please enter a question for the AI Analyst.");
+    return;
+  }
+
+  setAiLoading(true);
+  setAiError("");
+  setAiAnswer("");
+
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE || ""}/api/ai/analyze`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          question: aiQuestion,
+          district: selected
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.error || `AI service returned ${response.status}`
+      );
+    }
+
+    setAiAnswer(data.answer);
+
+  } catch (error) {
+    console.error("AI Analyst error:", error);
+    setAiError(
+      "AI Analyst is temporarily unavailable. Please try again."
+    );
+  } finally {
+    setAiLoading(false);
+  }
+};
+
 
   const [riskData,setRiskData] = useState(null);
   const [riskLoading,setRiskLoading] = useState(false);
@@ -432,16 +482,71 @@ function App() {
         )}
 
         {page === "AI Analyst" && (
-          <Page title="AI Analyst" subtitle="Intelligent hazard interpretation">
-            <div className="aiBox">
-              <Brain size={42}/>
-              <h3>SafeBhoomi AI Analyst</h3>
-              <p>Ask about district risk, rainfall conditions, hazards or response planning.</p>
-              <textarea placeholder="Ask the AI Analyst..."></textarea>
-              <button className="primary"><Brain size={17}/> ANALYZE SITUATION</button>
-            </div>
-          </Page>
-        )}
+  <Page
+    title="AI Analyst"
+    subtitle="Intelligent hazard interpretation"
+  >
+    <div className="aiBox">
+
+      <div className="aiHeader">
+        <div className="aiIcon">
+          <Brain size={42}/>
+        </div>
+
+        <div>
+          <h3>SafeBhoomi AI Analyst</h3>
+          <p>
+            Ask about district risk, rainfall, terrain, hazards
+            or response planning.
+          </p>
+        </div>
+      </div>
+
+      <div className="aiContext">
+        <span>ANALYSIS AREA</span>
+        <strong>{selected}</strong>
+      </div>
+
+      <textarea
+        value={aiQuestion}
+        onChange={(e) => setAiQuestion(e.target.value)}
+        placeholder="Ask the AI Analyst..."
+        rows={5}
+      />
+
+      <button
+        className="primary aiAnalyzeButton"
+        onClick={analyzeWithAI}
+        disabled={aiLoading}
+      >
+        <Brain size={17}/>
+        {aiLoading ? " ANALYZING..." : " ANALYZE SITUATION"}
+      </button>
+
+      {aiError && (
+        <div className="aiError">
+          {aiError}
+        </div>
+      )}
+
+      {aiAnswer && (
+        <div className="aiResult">
+
+          <div className="aiResultHeader">
+            <Brain size={20}/>
+            <span>AI ASSESSMENT</span>
+          </div>
+
+          <div className="aiResultText">
+            {aiAnswer}
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  </Page>
+)}
       </main>
 
       <footer>
