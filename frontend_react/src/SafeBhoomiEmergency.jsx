@@ -1,271 +1,204 @@
 
-import React, { useState } from "react";
+import React from "react";
+import {
+  Phone,
+  ShieldAlert,
+  Ambulance,
+  Flame,
+  Radio,
+  MapPin,
+  Building2,
+  Siren
+} from "lucide-react";
 
-const emergencyContacts = [
+const contacts = [
   {
     number: "112",
-    title: "Emergency Services",
-    description: "Police, fire, ambulance and disaster emergency response",
-    icon: "🚨",
-    primary: true
+    title: "Integrated Emergency Services",
+    description: "Police, fire, ambulance and disaster-related emergency assistance.",
+    icon: Siren,
+    type: "Emergency"
   },
   {
     number: "108",
-    title: "Emergency Ambulance",
-    description: "24×7 emergency ambulance service in Uttarakhand",
-    icon: "🚑"
+    title: "Ambulance",
+    description: "24/7 emergency medical response service in Uttarakhand.",
+    icon: Ambulance,
+    type: "Medical"
   },
   {
     number: "1070",
     title: "State Emergency Operation Centre",
-    description: "Uttarakhand State Emergency Operation Centre",
-    icon: "🏛️"
+    description: "State-level disaster emergency coordination and assistance.",
+    icon: Radio,
+    type: "Disaster"
   },
   {
     number: "1077",
     title: "District Emergency Operation Centre",
-    description: "District-level disaster emergency coordination",
-    icon: "📡"
+    description: "District-level disaster response and emergency coordination.",
+    icon: MapPin,
+    type: "District"
+  },
+  {
+    number: "0135-2710334",
+    title: "SEOC Landline",
+    description: "Uttarakhand State Emergency Operation Centre.",
+    icon: Building2,
+    type: "SEOC"
+  },
+  {
+    number: "0135-2710335",
+    title: "SEOC Landline",
+    description: "Additional State Emergency Operation Centre contact.",
+    icon: Building2,
+    type: "SEOC"
+  },
+  {
+    number: "0135-2664314",
+    title: "SEOC Landline",
+    description: "Additional emergency coordination line.",
+    icon: Radio,
+    type: "SEOC"
+  },
+  {
+    number: "0135-2664315",
+    title: "SEOC Landline",
+    description: "Additional emergency coordination line.",
+    icon: Radio,
+    type: "SEOC"
+  },
+  {
+    number: "0135-2664316",
+    title: "SEOC Landline",
+    description: "Additional emergency coordination line.",
+    icon: Radio,
+    type: "SEOC"
+  },
+  {
+    number: "0135-2664317",
+    title: "USDMA Reception",
+    description: "Uttarakhand State Disaster Management Authority reception.",
+    icon: Building2,
+    type: "USDMA"
   }
 ];
 
-const safetySteps = [
-  "Move away from unstable slopes, cliffs and falling-rock zones.",
-  "Do not enter a road section marked as blocked or unsafe.",
-  "Move to a safer open location if local authorities issue an evacuation warning.",
-  "When calling emergency services, clearly provide your location and situation.",
-  "Follow instructions from official emergency authorities."
-];
+function EmergencyCard({ item }) {
+  const Icon = item.icon;
 
-export default function SafeBhoomiEmergency() {
+  const phoneNumber = item.number.replace(/[^0-9+]/g, "");
 
-  const [confirmCall, setConfirmCall] = useState(null);
-  const [selectedDistrict, setSelectedDistrict] = useState("Nainital");
+  return (
+    <div className="emergencyContactCard">
+      <div className="emergencyContactIcon">
+        <Icon size={24} />
+      </div>
 
-  const makeCall = number => {
-    setConfirmCall(number);
-  };
+      <div className="emergencyContactInfo">
+        <div className="emergencyContactType">{item.type}</div>
+        <h3>{item.title}</h3>
+        <p>{item.description}</p>
+      </div>
 
-  const proceedCall = () => {
-    if (confirmCall) {
-      window.location.href = `tel:${confirmCall}`;
-    }
-  };
+      <a
+        className="emergencyCallButton"
+        href={`tel:${phoneNumber}`}
+        aria-label={`Call ${item.title} at ${item.number}`}
+      >
+        <Phone size={17} />
+        <strong>{item.number}</strong>
+      </a>
+    </div>
+  );
+}
 
+export function SafeBhoomiEmergency() {
   return (
     <div className="emergencyPage">
 
       <div className="emergencyHero">
+        <div className="emergencyHeroIcon">
+          <ShieldAlert size={34} />
+        </div>
 
         <div>
-
           <div className="emergencyEyebrow">
-            SAFEBHOOMI • EMERGENCY CENTER
+            SAFEBHOOMI EMERGENCY CENTER
           </div>
 
-          <h1>🚨 Emergency Assistance</h1>
+          <h1>Emergency Contacts</h1>
 
           <p>
-            Quick access to verified Uttarakhand emergency services
-            and disaster-control contacts.
+            Quick access to emergency, medical and disaster-response
+            contacts for Uttarakhand.
           </p>
-
         </div>
-
-        <div className="emergencyPulse">
-          <span></span>
-          EMERGENCY CENTER READY
-        </div>
-
       </div>
 
-      <div className="emergencyWarning">
-
-        <div className="warningIcon">
-          !
-        </div>
-
+      <div className="emergencyNotice">
+        <Siren size={20} />
         <div>
-          <strong>In immediate danger?</strong>
-
-          <p>
-            Call <b>112</b> for emergency services.
-            For medical ambulance assistance, call <b>108</b>.
-          </p>
+          <strong>If you are in immediate danger</strong>
+          <span>
+            Use the appropriate emergency service below. For an
+            integrated emergency response, call 112.
+          </span>
         </div>
-
       </div>
 
       <div className="emergencyGrid">
-
-        {emergencyContacts.map(contact => (
-
-          <div
-            key={contact.number}
-            className={
-              "emergencyCard " +
-              (contact.primary ? "primaryEmergency" : "")
-            }
-          >
-
-            <div className="emergencyCardIcon">
-              {contact.icon}
-            </div>
-
-            <div className="emergencyNumber">
-              {contact.number}
-            </div>
-
-            <h2>{contact.title}</h2>
-
-            <p>{contact.description}</p>
-
-            <button
-              onClick={() => makeCall(contact.number)}
-            >
-              📞 Call {contact.number}
-            </button>
-
-          </div>
-
+        {contacts.map((item) => (
+          <EmergencyCard
+            key={`${item.number}-${item.title}`}
+            item={item}
+          />
         ))}
-
       </div>
 
-      <div className="districtEmergency">
+      <section className="emergencySafetyPanel">
+        <div className="emergencySafetyHeader">
+          <ShieldAlert size={21} />
+          <div>
+            <h2>During a Landslide Emergency</h2>
+            <p>Use SafeBhoomi as an information aid, not as a replacement for official emergency instructions.</p>
+          </div>
+        </div>
 
-        <div>
-
-          <div className="sectionEyebrow">
-            DISTRICT EMERGENCY CONTROL
+        <div className="emergencySafetyGrid">
+          <div>
+            <strong>01</strong>
+            <span>Move away from active landslide zones when it is safe to do so.</span>
           </div>
 
-          <h2>District Emergency Operation Centre</h2>
+          <div>
+            <strong>02</strong>
+            <span>Follow instructions from local authorities and emergency responders.</span>
+          </div>
 
-          <p>
-            Select a district to view its verified control-room
-            contact information.
-          </p>
+          <div>
+            <strong>03</strong>
+            <span>Do not approach blocked roads, unstable slopes or damaged structures.</span>
+          </div>
 
+          <div>
+            <strong>04</strong>
+            <span>When calling for help, clearly provide your location and the nature of the emergency.</span>
+          </div>
         </div>
+      </section>
 
-        <select
-          value={selectedDistrict}
-          onChange={e => setSelectedDistrict(e.target.value)}
-        >
-
-          <option>Nainital</option>
-          <option>Almora</option>
-          <option>Bageshwar</option>
-          <option>Chamoli</option>
-          <option>Champawat</option>
-          <option>Dehradun</option>
-          <option>Haridwar</option>
-          <option>Pauri Garhwal</option>
-          <option>Rudraprayag</option>
-          <option>Tehri</option>
-          <option>Uttarkashi</option>
-          <option>Pithoragarh</option>
-          <option>Udham Singh Nagar</option>
-
-        </select>
-
-        <div className="districtContact">
-
-          <span>DEOC</span>
-
-          <strong>1077</strong>
-
-          <small>
-            District Emergency Operation Centre
-          </small>
-
-          <button onClick={() => makeCall("1077")}>
-            📞 Call District Emergency Centre
-          </button>
-
-        </div>
-
-      </div>
-
-      <div className="safetyPanel">
-
-        <div className="sectionEyebrow">
-          LANDSLIDE SAFETY
-        </div>
-
-        <h2>What to do during a landslide emergency</h2>
-
-        <div className="safetySteps">
-
-          {safetySteps.map((step, index) => (
-
-            <div key={index} className="safetyStep">
-
-              <span>{String(index + 1).padStart(2, "0")}</span>
-
-              <p>{step}</p>
-
-            </div>
-
-          ))}
-
-        </div>
-
-      </div>
-
-      <div className="emergencyOfficial">
-
-        <strong>Official emergency information</strong>
-
+      <div className="emergencyFooterNote">
+        <span>DATA SOURCE</span>
         <p>
-          Emergency numbers shown here are based on
-          Uttarakhand government sources.
+          Emergency contact information is based on Uttarakhand State
+          Disaster Management Authority and Uttarakhand Government
+          information.
         </p>
-
       </div>
-
-      {confirmCall && (
-
-        <div className="callOverlay">
-
-          <div className="callDialog">
-
-            <div className="callIcon">
-              📞
-            </div>
-
-            <h2>Call {confirmCall}?</h2>
-
-            <p>
-              This will open your device's phone
-              calling interface.
-            </p>
-
-            <div className="callActions">
-
-              <button
-                className="cancelCall"
-                onClick={() => setConfirmCall(null)}
-              >
-                Cancel
-              </button>
-
-              <button
-                className="confirmCall"
-                onClick={proceedCall}
-              >
-                Call Now
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
 
     </div>
   );
 }
+
+export default SafeBhoomiEmergency;
