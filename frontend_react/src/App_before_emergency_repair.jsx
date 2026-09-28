@@ -34,7 +34,6 @@ const nav = [
 
 function App() {
   const [showIntro, setShowIntro] = useState(true);
-  const [showEmergencyCenter, setShowEmergencyCenter] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -182,7 +181,7 @@ const analyzeWithAI = async () => {
           {online ? "LIVE INTELLIGENCE" : "OFFLINE MODE"}
         </div>
 
-        <button className="emergency" onClick={() => setShowEmergencyCenter(true)}>
+        <button className="emergency" onClick={()=>alert("Emergency mode activated. Connect emergency calling in the next backend step.")}>
           <PhoneCall size={17}/> EMERGENCY
         </button>
 
@@ -580,135 +579,7 @@ function Alert({title,place,text}) {
 }
 
 function Page({title,subtitle,children}) {
-  return <><div className="sectionTitle"><div><span>SAFEBHOOMI INTELLIGENCE</span><h2>{title}</h2><p>{subtitle}</p></div></div>{children}
-
-      {/* SAFEBHOOMI_EMERGENCY_MODAL */}
-      {showEmergencyCenter && (
-        <div className="sbEmergencyOverlay">
-
-          <div className="sbEmergencyModal">
-
-            <button
-              className="sbEmergencyClose"
-              onClick={() => setShowEmergencyCenter(false)}
-              aria-label="Close emergency center"
-            >
-              ×
-            </button>
-
-            <div className="sbEmergencyHeader">
-              <div className="sbEmergencyIcon">🚨</div>
-
-              <div>
-                <div className="sbEmergencyEyebrow">
-                  SAFEBHOOMI EMERGENCY CENTER
-                </div>
-
-                <h2>Emergency Assistance</h2>
-
-                <p>
-                  If you are in immediate danger, contact emergency
-                  services directly.
-                </p>
-              </div>
-            </div>
-
-            <div className="sbEmergencyAlert">
-              <strong>⚠️ Immediate danger?</strong>
-              <span>
-                Call <b>112</b> for emergency services.
-              </span>
-            </div>
-
-            <div className="sbEmergencyGrid">
-
-              <a
-                className="sbEmergencyCall primary"
-                href="tel:112"
-              >
-                <span>🚨</span>
-                <div>
-                  <small>EMERGENCY SERVICES</small>
-                  <strong>112</strong>
-                </div>
-                <b>CALL →</b>
-              </a>
-
-              <a
-                className="sbEmergencyCall"
-                href="tel:108"
-              >
-                <span>🚑</span>
-                <div>
-                  <small>AMBULANCE</small>
-                  <strong>108</strong>
-                </div>
-                <b>CALL →</b>
-              </a>
-
-              <a
-                className="sbEmergencyCall"
-                href="tel:1070"
-              >
-                <span>🏛️</span>
-                <div>
-                  <small>STATE EMERGENCY CENTRE</small>
-                  <strong>1070</strong>
-                </div>
-                <b>CALL →</b>
-              </a>
-
-              <a
-                className="sbEmergencyCall"
-                href="tel:1077"
-              >
-                <span>📡</span>
-                <div>
-                  <small>DISTRICT EMERGENCY CENTRE</small>
-                  <strong>1077</strong>
-                </div>
-                <b>CALL →</b>
-              </a>
-
-            </div>
-
-            <div className="sbEmergencySafety">
-
-              <strong>LANDSLIDE SAFETY</strong>
-
-              <div>
-                <span>01</span>
-                Move away from unstable slopes and falling-rock areas.
-              </div>
-
-              <div>
-                <span>02</span>
-                Do not enter blocked or visibly unsafe roads.
-              </div>
-
-              <div>
-                <span>03</span>
-                Give emergency services your exact location when calling.
-              </div>
-
-              <div>
-                <span>04</span>
-                Follow instructions from official emergency authorities.
-              </div>
-
-            </div>
-
-            <div className="sbEmergencyFooter">
-              Emergency numbers shown are for Uttarakhand emergency services.
-              SafeBhoomi does not automatically dispatch emergency responders.
-            </div>
-
-          </div>
-
-        </div>
-      )}
-
-</>
+  return <><div className="sectionTitle"><div><span>SAFEBHOOMI INTELLIGENCE</span><h2>{title}</h2><p>{subtitle}</p></div></div>{children}</>
 }
 
 export default App
