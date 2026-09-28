@@ -7,8 +7,6 @@ import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <SafeBhoomiErrorBoundary>
-      <App />
-    </SafeBhoomiErrorBoundary>
+    <App />
   </React.StrictMode>
 );
