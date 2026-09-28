@@ -263,13 +263,13 @@ const analyzeWithAI = async () => {
         )}
 
         {page === "Live Map" && (
-          <SafeBhoomiLiveMap
-            onDistrictSelect={(districtName) => {
-              setSelected(districtName);
-              setPage("Area Risk");
-            }}
-          />
-        )}
+      <SafeBhoomiLiveMap
+        onDistrictSelect={(districtName) => {
+          setSelected(districtName);
+          setPage("Area Risk");
+        }}
+      />
+    )}
 
         {page === "Districts" && (
           <Page title="District Intelligence" subtitle="All 13 Uttarakhand districts">
