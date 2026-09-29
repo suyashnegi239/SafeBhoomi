@@ -1,0 +1,1239 @@
+
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import * as maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+const UK_BOUNDS = [
+  [77.90, 28.55],
+  [81.20, 31.55],
+];
+
+const UK_CENTER = [79.35, 30.15];
+
+const SATELLITE_TILES =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+
+const DISTRICT_URL =
+  "/SafeBhoomi/safebhoomi_districts.json";
+
+const GEOJSON_URL =
+  "/uttarakhand_districts.geojson";
+
+function num(...values) {
+  for (const v of values) {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return 0;
+}
+
+function key(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\bdistrict\b/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function riskColor(score) {
+  const n = num(score);
+
+  if (n >= 75) return "#ef4444";
+  if (n >= 60) return "#f97316";
+  if (n >= 40) return "#eab308";
+
+  return "#22c55e";
+}
+
+function riskName(score) {
+  const n = num(score);
+
+  if (n >= 75) return "Very High";
+  if (n >= 60) return "High";
+  if (n >= 40) return "Moderate";
+
+  return "Low";
+}
+
+function normalize(row) {
+  if (!row) return null;
+
+  const district =
+    row.district ??
+    row.District ??
+    row.district_name ??
+    row.DistrictName ??
+    row.name ??
+    row.Name;
+
+  if (!district) return null;
+
+  return {
+    district: String(district),
+
+    score: num(
+      row.risk_score,
+      row.riskScore,
+      row.score,
+      row.RiskScore,
+      row.risk
+    ),
+
+    rainfall: num(
+      row.rainfall,
+      row.Rainfall,
+      row.rainfall_mm,
+      row.Rainfall_mm,
+      row.precipitation,
+      row.Precipitation_mm
+    ),
+
+    slope: num(
+      row.slope,
+      row.Slope,
+      row.slope_deg,
+      row.Slope_deg
+    ),
+
+    soil: num(
+      row.soil,
+      row.Soil,
+      row.soil_saturation,
+      row.SoilSaturation
+    ),
+
+    landslides: num(
+      row.landslides,
+      row.Landslides,
+      row.landslide_count,
+      row.historical_landslides
+    ),
+  };
+}
+
+function extractRows(data) {
+  if (!data) return [];
+
+  if (Array.isArray(data)) {
+    return data.map(normalize).filter(Boolean);
+  }
+
+  for (const name of [
+    "districts",
+    "data",
+    "results",
+    "risks",
+    "district_risks",
+  ]) {
+    if (Array.isArray(data[name])) {
+      return data[name]
+        .map(normalize)
+        .filter(Boolean);
+    }
+  }
+
+  return [];
+}
+
+export default function SafeBhoomiLiveMap({
+  onDistrictSelect,
+}) {
+  const mapElement = useRef(null);
+  const map = useRef(null);
+  const popup = useRef(null);
+
+  const [geo, setGeo] = useState(null);
+  const [districts, setDistricts] = useState([]);
+
+  const [selected, setSelected] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [riskLoading, setRiskLoading] = useState(false);
+
+  const [message, setMessage] = useState("");
+
+  // ==========================================================
+  // LOAD DISTRICT BOUNDARY + LOCAL DATA
+  // ==========================================================
+
+  useEffect(() => {
+    let alive = true;
+
+    async function load() {
+      try {
+        const [geoResponse, districtResponse] =
+          await Promise.all([
+            fetch(GEOJSON_URL),
+            fetch(DISTRICT_URL),
+          ]);
+
+        if (!geoResponse.ok) {
+          throw new Error(
+            "Uttarakhand GeoJSON unavailable"
+          );
+        }
+
+        const geoData =
+          await geoResponse.json();
+
+        let localRows = [];
+
+        if (districtResponse.ok) {
+          const data =
+            await districtResponse.json();
+
+          localRows = extractRows(data);
+        }
+
+        if (alive) {
+          setGeo(geoData);
+          setDistricts(localRows);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (alive) {
+          setMessage(
+            "District data could not be loaded."
+          );
+        }
+      } finally {
+        if (alive) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // ==========================================================
+  // REAL SAFEBHOOMI RISK ENGINE
+  // ==========================================================
+
+  useEffect(() => {
+
+    let alive = true;
+
+    async function loadLiveRisk() {
+
+      setRiskLoading(true);
+
+      const districts = [
+        "Almora",
+        "Bageshwar",
+        "Chamoli",
+        "Champawat",
+        "Dehradun",
+        "Haridwar",
+        "Nainital",
+        "Pauri Garhwal",
+        "Pithoragarh",
+        "Rudraprayag",
+        "Tehri Garhwal",
+        "Udham Singh Nagar",
+        "Uttarkashi",
+      ];
+
+      const apiBase =
+        import.meta.env.VITE_API_BASE || "";
+
+      const endpoint =
+        `${apiBase}/api/risk/unified`;
+
+      try {
+
+        const responses =
+          await Promise.allSettled(
+            districts.map(async (district) => {
+
+              const response =
+                await fetch(
+                  endpoint,
+                  {
+                    method: "POST",
+
+                    headers: {
+                      "Content-Type":
+                        "application/json",
+                    },
+
+                    body: JSON.stringify({
+                      district: district,
+                    }),
+                  }
+                );
+
+              if (!response.ok) {
+                throw new Error(
+                  `${district}: HTTP ${response.status}`
+                );
+              }
+
+              const result =
+                await response.json();
+
+              return {
+                district,
+                result,
+              };
+
+            })
+          );
+
+        if (!alive) return;
+
+        const liveRows = [];
+
+        let successCount = 0;
+
+        responses.forEach((item) => {
+
+          if (item.status !== "fulfilled") {
+
+            console.warn(
+              "Risk request failed:",
+              item.reason
+            );
+
+            return;
+          }
+
+          successCount++;
+
+          const district =
+            item.value.district;
+
+          const result =
+            item.value.result;
+
+          const data =
+            result?.result ||
+            result?.data ||
+            result ||
+            {};
+
+          liveRows.push({
+
+            district,
+
+            score: Number(
+              data.risk_score ??
+              data.riskScore ??
+              data.unified_risk_score ??
+              data.score ??
+              0
+            ),
+
+            risk_level:
+              data.risk_level ??
+              data.riskLevel ??
+              data.level ??
+              "",
+
+            rainfall: Number(
+              data.rainfall_24h ??
+              data.rainfall_mm ??
+              data.rainfall ??
+              0
+            ),
+
+            rainfall_7d: Number(
+              data.rainfall_7d ??
+              0
+            ),
+
+            humidity: Number(
+              data.humidity ??
+              data.humidity_pct ??
+              0
+            ),
+
+            soil: Number(
+              data.soil_saturation ??
+              data.soil_saturation_pct ??
+              0
+            ),
+
+            historical_susceptibility:
+              Number(
+                data.historical_susceptibility ??
+                0
+              ),
+
+            landslides: Number(
+              data.recent_landslides ??
+              data.landslides ??
+              0
+            ),
+
+            road_blockages: Number(
+              data.road_blockages ??
+              0
+            ),
+
+            slope: Number(
+              data.slope ??
+              data.slope_deg ??
+              0
+            ),
+
+          });
+
+        });
+
+        // ------------------------------------------------------
+        // MERGE LIVE RISK INTO EXISTING DISTRICT DATA
+        // ------------------------------------------------------
+
+        setDistricts((old) => {
+
+          const merged = new Map();
+
+          old.forEach((item) => {
+
+            const normalized =
+              normalize(item);
+
+            if (normalized) {
+
+              merged.set(
+                key(normalized.district),
+                normalized
+              );
+
+            }
+
+          });
+
+          liveRows.forEach((row) => {
+
+            const districtKey =
+              key(row.district);
+
+            const previous =
+              merged.get(districtKey) || {};
+
+            merged.set(
+              districtKey,
+              {
+                ...previous,
+                ...row,
+              }
+            );
+
+          });
+
+          return Array.from(
+            merged.values()
+          );
+
+        });
+
+        if (successCount === 13) {
+
+          setMessage("");
+
+        } else if (successCount > 0) {
+
+          setMessage(
+            `Risk engine connected: ${successCount}/13 districts loaded.`
+          );
+
+        } else {
+
+          setMessage(
+            "Risk engine returned no district results."
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "SafeBhoomi risk engine error:",
+          error
+        );
+
+        if (alive) {
+
+          setMessage(
+            "Could not connect to the SafeBhoomi risk engine."
+          );
+
+        }
+
+      } finally {
+
+        if (alive) {
+          setRiskLoading(false);
+        }
+
+      }
+
+    }
+
+    loadLiveRisk();
+
+    return () => {
+      alive = false;
+    };
+
+  }, []);
+
+  // ==========================================================
+  // RISK LOOKUP
+  // ==========================================================
+
+  const lookup = useMemo(() => {
+    const result = new Map();
+
+    districts.forEach((row) => {
+      const normalized = normalize(row);
+
+      if (normalized) {
+        result.set(
+          key(normalized.district),
+          normalized
+        );
+      }
+    });
+
+    return result;
+  }, [districts]);
+
+  // ==========================================================
+  // COLOR DISTRICTS
+  // ==========================================================
+
+  const coloredGeo = useMemo(() => {
+    if (!geo) return null;
+
+    return {
+      ...geo,
+
+      features: (geo.features || []).map(
+        (feature) => {
+          const props = {
+            ...(feature.properties || {}),
+          };
+
+          const district =
+            props.DISTRICT ??
+            props.district ??
+            props.District ??
+            props.NAME ??
+            props.Name ??
+            props.name ??
+            "Unknown";
+
+          const data =
+            lookup.get(key(district)) || {
+              district,
+              score: 0,
+              rainfall: 0,
+              slope: 0,
+              soil: 0,
+              landslides: 0,
+            };
+
+          return {
+            ...feature,
+
+            properties: {
+              ...props,
+
+              safebhoomi_district:
+                district,
+
+              safebhoomi_score:
+                data.score,
+
+              safebhoomi_risk:
+                riskName(data.score),
+
+              safebhoomi_rainfall:
+                data.rainfall,
+
+              safebhoomi_slope:
+                data.slope,
+
+              safebhoomi_soil:
+                data.soil,
+
+              safebhoomi_landslides:
+                data.landslides,
+            },
+          };
+        }
+      ),
+    };
+  }, [geo, lookup]);
+
+  // ==========================================================
+  // CREATE MAP
+  // ==========================================================
+
+  useEffect(() => {
+    if (!mapElement.current) return;
+    if (!coloredGeo) return;
+    if (map.current) return;
+
+    const instance =
+      new maplibregl.Map({
+        container: mapElement.current,
+
+        style: {
+          version: 8,
+
+          sources: {
+            satellite: {
+              type: "raster",
+
+              tiles: [
+                SATELLITE_TILES,
+              ],
+
+              tileSize: 256,
+
+              attribution:
+                "© Esri, Maxar, Earthstar Geographics",
+            },
+
+            districts: {
+              type: "geojson",
+              data: coloredGeo,
+            },
+          },
+
+          layers: [
+
+            // =================================================
+            // REAL SATELLITE MAP
+            // =================================================
+
+            {
+              id: "satellite",
+
+              type: "raster",
+
+              source: "satellite",
+
+              paint: {
+                "raster-opacity": 1,
+              },
+            },
+
+            // =================================================
+            // DISTRICT RISK
+            // =================================================
+
+            {
+              id: "district-risk",
+
+              type: "fill",
+
+              source: "districts",
+
+              paint: {
+                "fill-color": [
+                  "match",
+
+                  [
+                    "get",
+                    "safebhoomi_risk",
+                  ],
+
+                  "Very High",
+                  "#ef4444",
+
+                  "High",
+                  "#f97316",
+
+                  "Moderate",
+                  "#eab308",
+
+                  "Low",
+                  "#22c55e",
+
+                  "#64748b",
+                ],
+
+                "fill-opacity": 0.38,
+              },
+            },
+
+            // =================================================
+            // DISTRICT BORDERS
+            // =================================================
+
+            {
+              id: "district-borders",
+
+              type: "line",
+
+              source: "districts",
+
+              paint: {
+                "line-color":
+                  "#ffffff",
+
+                "line-width": 1.5,
+
+                "line-opacity": 0.9,
+              },
+            },
+          ],
+        },
+
+        center: UK_CENTER,
+
+        zoom: 7,
+
+        minZoom: 5.8,
+
+        maxZoom: 14,
+
+        maxBounds: [
+          [77.5, 28.25],
+          [81.7, 31.9],
+        ],
+
+        pitch: 45,
+
+        bearing: 10,
+      });
+
+    map.current = instance;
+
+    // Navigation
+    instance.addControl(
+      new maplibregl.NavigationControl({
+        visualizePitch: true,
+      }),
+      "top-right"
+    );
+
+    // Scale
+    instance.addControl(
+      new maplibregl.ScaleControl(),
+      "bottom-left"
+    );
+
+    // ========================================================
+    // FIT ONLY UTTARAKHAND
+    // ========================================================
+
+    instance.on("load", () => {
+      try {
+        instance.fitBounds(
+          UK_BOUNDS,
+          {
+            padding: 25,
+            duration: 1200,
+            maxZoom: 8,
+          }
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    // ========================================================
+    // DISTRICT CLICK
+    // ========================================================
+
+    instance.on(
+      "click",
+      "district-risk",
+      (event) => {
+        const feature =
+          event.features?.[0];
+
+        if (!feature) return;
+
+        const p =
+          feature.properties || {};
+
+        const name =
+          p.safebhoomi_district ||
+          "Unknown";
+
+        const data =
+          lookup.get(key(name)) || {
+            district: name,
+            score: 0,
+            rainfall: 0,
+            slope: 0,
+            soil: 0,
+            landslides: 0,
+          };
+
+        setSelected(data);
+
+        if (onDistrictSelect) {
+          onDistrictSelect(name);
+        }
+
+        popup.current?.remove();
+
+        popup.current =
+          new maplibregl.Popup({
+            closeButton: true,
+            maxWidth: "310px",
+          })
+            .setLngLat(event.lngLat)
+            .setHTML(`
+              <div class="safebhoomiPopup">
+
+                <div class="popupLabel">
+                  SAFEBHOOMI DISTRICT
+                </div>
+
+                <h3>
+                  ${name}
+                </h3>
+
+                <div
+                  class="popupRisk"
+                  style="
+                    color:${riskColor(data.score)};
+                    border-color:${riskColor(data.score)};
+                  "
+                >
+                  ${riskName(data.score)}
+                  ·
+                  ${data.score}/100
+                </div>
+
+                <div class="popupGrid">
+
+                  <div>
+                    <b>${data.rainfall}</b>
+                    <span>Rainfall mm</span>
+                  </div>
+
+                  <div>
+                    <b>${data.slope}</b>
+                    <span>Slope °</span>
+                  </div>
+
+                  <div>
+                    <b>${data.soil}</b>
+                    <span>Soil</span>
+                  </div>
+
+                  <div>
+                    <b>${data.landslides}</b>
+                    <span>Landslides</span>
+                  </div>
+
+                </div>
+
+              </div>
+            `)
+            .addTo(instance);
+      }
+    );
+
+    instance.on(
+      "mouseenter",
+      "district-risk",
+      () => {
+        instance.getCanvas().style.cursor =
+          "pointer";
+      }
+    );
+
+    instance.on(
+      "mouseleave",
+      "district-risk",
+      () => {
+        instance.getCanvas().style.cursor =
+          "";
+      }
+    );
+
+    return () => {
+      popup.current?.remove();
+
+      instance.remove();
+
+      map.current = null;
+    };
+  }, [
+    coloredGeo,
+    lookup,
+    onDistrictSelect,
+  ]);
+
+  // ==========================================================
+  // LOCATION
+  // ==========================================================
+
+  function locateMe() {
+    if (!navigator.geolocation) {
+      setMessage(
+        "Geolocation is unavailable."
+      );
+
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coordinates = [
+          position.coords.longitude,
+          position.coords.latitude,
+        ];
+
+        if (!map.current) return;
+
+        map.current.flyTo({
+          center: coordinates,
+          zoom: 11,
+          pitch: 55,
+          bearing: 15,
+          duration: 1400,
+        });
+
+        if (
+          !map.current.getSource(
+            "user-location"
+          )
+        ) {
+          map.current.addSource(
+            "user-location",
+            {
+              type: "geojson",
+
+              data: {
+                type: "Feature",
+
+                geometry: {
+                  type: "Point",
+
+                  coordinates,
+                },
+              },
+            }
+          );
+
+          map.current.addLayer({
+            id: "user-location",
+
+            type: "circle",
+
+            source: "user-location",
+
+            paint: {
+              "circle-radius": 8,
+
+              "circle-color":
+                "#38bdf8",
+
+              "circle-stroke-color":
+                "#ffffff",
+
+              "circle-stroke-width": 3,
+            },
+          });
+        }
+      },
+
+      () => {
+        setMessage(
+          "Location permission was denied."
+        );
+      },
+
+      {
+        enableHighAccuracy: true,
+
+        timeout: 10000,
+
+        maximumAge: 30000,
+      }
+    );
+  }
+
+  function resetMap() {
+    if (!map.current) return;
+
+    map.current.fitBounds(
+      UK_BOUNDS,
+      {
+        padding: 25,
+        duration: 1000,
+        maxZoom: 8,
+      }
+    );
+
+    map.current.easeTo({
+      pitch: 45,
+      bearing: 10,
+      duration: 800,
+    });
+  }
+
+  // ==========================================================
+  // SUMMARY
+  // ==========================================================
+
+  const summary = useMemo(() => {
+    let veryHigh = 0;
+    let high = 0;
+    let moderate = 0;
+    let low = 0;
+
+    districts.forEach((d) => {
+      const score = num(d.score);
+
+      if (score >= 75) veryHigh++;
+      else if (score >= 60) high++;
+      else if (score >= 40) moderate++;
+      else low++;
+    });
+
+    return {
+      veryHigh,
+      high,
+      moderate,
+      low,
+    };
+  }, [districts]);
+
+  // ==========================================================
+  // UI
+  // ==========================================================
+
+  return (
+    <section className="safeBhoomiMapWrapper">
+
+      {/* ====================================================
+          THIS IS THE SEPARATE BACKGROUND IMAGE.
+          IT IS NOT THE MAP.
+          ==================================================== */}
+
+      <div className="safeBhoomiBackground" />
+
+      <div className="safeBhoomiMapContent">
+
+        <header className="safeMapHeader">
+
+          <div>
+
+            <div className="safeMapEyebrow">
+              SAFEBHOOMI • LIVE INTELLIGENCE
+            </div>
+
+            <h1>
+              Uttarakhand Satellite Risk Map
+            </h1>
+
+            <p>
+              Real satellite imagery with
+              district-level hazard intelligence.
+            </p>
+
+          </div>
+
+          <div className="safeMapButtons">
+
+            <button
+              onClick={locateMe}
+            >
+              📍 My Location
+            </button>
+
+            <button
+              onClick={resetMap}
+            >
+              🏔 Uttarakhand
+            </button>
+
+          </div>
+
+        </header>
+
+        {/* ==================================================
+            RISK LEGEND
+            ================================================== */}
+
+        <div className="riskLegend">
+
+          <div>
+            <i className="riskVeryHigh" />
+            Very High
+            <b>{summary.veryHigh}</b>
+          </div>
+
+          <div>
+            <i className="riskHigh" />
+            High
+            <b>{summary.high}</b>
+          </div>
+
+          <div>
+            <i className="riskModerate" />
+            Moderate
+            <b>{summary.moderate}</b>
+          </div>
+
+          <div>
+            <i className="riskLow" />
+            Low
+            <b>{summary.low}</b>
+          </div>
+
+        </div>
+
+        {message && (
+          <div className="safeMapMessage">
+            ⚠️ {message}
+          </div>
+        )}
+
+        {/* ==================================================
+            ACTUAL SATELLITE MAP
+            ================================================== */}
+
+        <div className="satelliteMapShell">
+
+          <div
+            ref={mapElement}
+            className="satelliteMap"
+          />
+
+          {loading && (
+            <div className="mapLoader">
+              <strong>
+                Loading Uttarakhand satellite map…
+              </strong>
+
+              <span>
+                Preparing district boundaries
+              </span>
+            </div>
+          )}
+
+          {riskLoading && (
+            <div className="riskConnection">
+              ● Connecting to risk engine…
+            </div>
+          )}
+
+          {/* =================================================
+              SELECTED DISTRICT PANEL
+              ================================================= */}
+
+          {selected && (
+            <aside className="districtIntel">
+
+              <div className="intelLabel">
+                SELECTED DISTRICT
+              </div>
+
+              <h2>
+                {selected.district}
+              </h2>
+
+              <div
+                className="intelRisk"
+                style={{
+                  color:
+                    riskColor(
+                      selected.score
+                    ),
+
+                  borderColor:
+                    riskColor(
+                      selected.score
+                    ),
+                }}
+              >
+                {riskName(
+                  selected.score
+                )}
+
+                {" · "}
+
+                {selected.score}/100
+              </div>
+
+              <div className="intelGrid">
+
+                <div>
+                  <span>Rainfall</span>
+                  <b>
+                    {selected.rainfall} mm
+                  </b>
+                </div>
+
+                <div>
+                  <span>Slope</span>
+                  <b>
+                    {selected.slope}°
+                  </b>
+                </div>
+
+                <div>
+                  <span>Soil</span>
+                  <b>
+                    {selected.soil}
+                  </b>
+                </div>
+
+                <div>
+                  <span>Landslides</span>
+                  <b>
+                    {selected.landslides}
+                  </b>
+                </div>
+
+              </div>
+
+              <p className="intelText">
+
+                {selected.score >= 75
+                  ? "Very high modeled hazard. Monitor official warnings closely."
+                  : selected.score >= 60
+                  ? "High modeled hazard. Increased monitoring is advised."
+                  : selected.score >= 40
+                  ? "Moderate modeled hazard. Continue monitoring conditions."
+                  : "Low modeled hazard under the currently available data."
+                }
+
+              </p>
+
+            </aside>
+          )}
+
+        </div>
+
+        <div className="mapFooter">
+          🛰 Satellite imagery
+          {" • "}
+          🗺 13-district boundary layer
+          {" • "}
+          🔴 Risk intelligence
+          {" • "}
+          📍 Location
+          {" • "}
+          🏔 Terrain navigation
+        </div>
+
+      </div>
+
+    </section>
+  );
+}

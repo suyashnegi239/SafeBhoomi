@@ -5647,3 +5647,69 @@ body {
   background: transparent;
 }
 /* END SAFEBHOOMI MOUNTAIN BACKGROUND v2 */
+
+
+/* ============================================================
+   SAFEBHOOMI RUNTIME MAP SAFETY
+   ============================================================ */
+
+.safeMapStage {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 620px !important;
+  height: 620px !important;
+  overflow: hidden !important;
+  border-radius: 24px !important;
+}
+
+.safeMapCanvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 620px !important;
+  display: block !important;
+  background: #172033 !important;
+}
+
+.maplibregl-map {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas {
+  outline: none !important;
+}
+
+
+/* ============================================================
+   SAFEBHOOMI RUNTIME MAP SAFETY
+   ============================================================ */
+
+.safeMapStage {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 620px !important;
+  height: 620px !important;
+  overflow: hidden !important;
+  border-radius: 24px !important;
+}
+
+.safeMapCanvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 620px !important;
+  display: block !important;
+  background: #172033 !important;
+}
+
+.maplibregl-map {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas {
+  outline: none !important;
+}
