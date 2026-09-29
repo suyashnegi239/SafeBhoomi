@@ -42,6 +42,59 @@ function riskName(score) {
   return "LOW";
 }
 
+/* ---------------------------------------------------------
+   Convert raw measurements into simple human-readable words
+--------------------------------------------------------- */
+
+function rainfallStatus(mm) {
+  if (mm >= 100) return "EXTREME";
+  if (mm >= 60) return "HEAVY";
+  if (mm >= 30) return "MODERATE";
+  if (mm > 0) return "LIGHT";
+  return "LOW";
+}
+
+function soilStatus(percent) {
+  if (percent >= 85) return "SATURATED";
+  if (percent >= 65) return "WET";
+  if (percent >= 40) return "MOIST";
+  return "DRY";
+}
+
+function landslideStatus(count) {
+  if (count >= 5) return "ACTIVE";
+  if (count >= 2) return "WATCH";
+  if (count === 1) return "REPORTED";
+  return "QUIET";
+}
+
+function slopeStatus(degrees) {
+  if (degrees >= 35) return "STEEP";
+  if (degrees >= 25) return "SLOPED";
+  if (degrees >= 15) return "GENTLE";
+  return "FLAT";
+}
+
+function roadStatus(blockages) {
+  if (blockages >= 5) return "BLOCKED";
+  if (blockages >= 2) return "DISRUPTED";
+  if (blockages === 1) return "CAUTION";
+  return "OPEN";
+}
+
+function alertStatus(score, rainfall, landslides) {
+  if (score >= 75 || rainfall >= 100 || landslides >= 5) return "ACTIVE";
+  if (score >= 60 || rainfall >= 60 || landslides >= 2) return "WATCH";
+  return "CLEAR";
+}
+
+function weatherStatus(rainfall, humidity) {
+  if (rainfall >= 60) return "RAINY";
+  if (humidity >= 85) return "HUMID";
+  if (humidity >= 65) return "CLOUDY";
+  return "CLEAR";
+}
+
 function FitUttarakhand({ geo }) {
   const map = useMap();
 
@@ -49,17 +102,27 @@ function FitUttarakhand({ geo }) {
     if (!geo) return;
 
     try {
-      const layer = L.geoJSON(geo);
+      const layer = window.L.geoJSON(geo);
       map.fitBounds(layer.getBounds(), {
         padding: [25, 25],
         maxZoom: 8
       });
-    } catch (e) {
+    } catch {
       map.setView(CENTER, 7);
     }
   }, [geo, map]);
 
   return null;
+}
+
+function IntelligenceRow({ icon, label, value }) {
+  return (
+    <div className="intelRow">
+      <span className="intelIcon">{icon}</span>
+      <span className="intelLabel">{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
 }
 
 export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
@@ -113,6 +176,7 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
     try {
       const g = await fetch("/SafeBhoomi/uttarakhand.geojson")
         .then(r => r.json());
+
       setGeo(g);
     } catch (e) {
       console.warn("Boundary unavailable", e);
@@ -124,7 +188,9 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
 
   useEffect(() => {
     loadData();
+
     const timer = setInterval(loadData, 60000);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -168,7 +234,7 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
     );
 
     layer.bindTooltip(
-      `${name}${d ? ` • ${riskName(d.score)} ${d.score}` : ""}`,
+      `${name}${d ? ` • ${riskName(d.score)}` : ""}`,
       { sticky: true }
     );
 
@@ -179,9 +245,11 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
           fillOpacity: 0.65
         });
       },
+
       mouseout: e => {
         e.target.setStyle(districtStyle(feature));
       },
+
       click: () => {
         if (d) {
           setSelected(d);
@@ -198,10 +266,14 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
 
       <div className="mapHeader">
         <div>
-          <div className="mapEyebrow">SAFEBHOOMI • TERRAIN INTELLIGENCE</div>
+          <div className="mapEyebrow">
+            SAFEBHOOMI • TERRAIN INTELLIGENCE
+          </div>
+
           <h1>Uttarakhand Live Hazard Map</h1>
+
           <p>
-            Interactive district-level landslide risk monitoring
+            Click any district to inspect live hazard intelligence
           </p>
         </div>
 
@@ -216,18 +288,22 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
           <strong>{districts.length}</strong>
           <span>Districts</span>
         </div>
+
         <div className="critical">
           <strong>{stats.critical}</strong>
           <span>Critical</span>
         </div>
+
         <div className="high">
           <strong>{stats.high}</strong>
           <span>High</span>
         </div>
+
         <div className="moderate">
           <strong>{stats.moderate}</strong>
           <span>Moderate</span>
         </div>
+
         <div className="low">
           <strong>{stats.low}</strong>
           <span>Low</span>
@@ -235,6 +311,7 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
       </div>
 
       <div className="mapToolbar">
+
         <button onClick={() => setShowZones(v => !v)}>
           {showZones ? "● Risk Zones" : "○ Risk Zones"}
         </button>
@@ -254,6 +331,7 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
         <span className="mapUpdated">
           Updated {lastUpdate.toLocaleTimeString()}
         </span>
+
       </div>
 
       <div className="mapMain">
@@ -268,7 +346,7 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
         >
 
           <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
+            attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
@@ -287,7 +365,10 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
               <CircleMarker
                 key={d.name}
                 center={[d.lat, d.lon]}
-                radius={Math.max(8, Math.min(25, 7 + d.score / 5))}
+                radius={Math.max(
+                  8,
+                  Math.min(25, 7 + d.score / 5)
+                )}
                 pathOptions={{
                   color: riskColor(d.score),
                   fillColor: riskColor(d.score),
@@ -305,48 +386,60 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
                   }
                 }}
               >
+
                 <Popup>
                   <div className="riskPopup">
-                    <div className="popupTitle">{d.name}</div>
+
+                    <div className="popupTitle">
+                      {d.name}
+                    </div>
 
                     <div
                       className="popupRisk"
-                      style={{ color: riskColor(d.score) }}
+                      style={{
+                        color: riskColor(d.score)
+                      }}
                     >
-                      {riskName(d.score)} — {d.score}/100
+                      {riskName(d.score)}
                     </div>
 
-                    <div className="popupGrid">
-                      <span>Rainfall</span>
-                      <b>{d.rainfall} mm</b>
+                    <div className="popupQuickGrid">
 
-                      <span>Recent landslides</span>
-                      <b>{d.landslides}</b>
+                      <span>Rain</span>
+                      <b>{rainfallStatus(d.rainfall)}</b>
 
-                      <span>Slope</span>
-                      <b>{d.slope}°</b>
+                      <span>Soil</span>
+                      <b>{soilStatus(d.saturation)}</b>
 
-                      <span>Soil saturation</span>
-                      <b>{d.saturation}%</b>
+                      <span>Landslide</span>
+                      <b>{landslideStatus(d.landslides)}</b>
 
-                      <span>Road blockages</span>
-                      <b>{d.blockages}</b>
+                      <span>Road</span>
+                      <b>{roadStatus(d.blockages)}</b>
+
                     </div>
 
                     <button
                       className="popupButton"
-                      onClick={() => onDistrictSelect?.(d.name)}
+                      onClick={() =>
+                        onDistrictSelect?.(d.name)
+                      }
                     >
                       Open District Analysis →
                     </button>
+
                   </div>
                 </Popup>
+
               </CircleMarker>
-            ))}
+            ))
+          }
+
         </MapContainer>
 
         {selectedData && (
           <div className="mapSidePanel">
+
             <button
               className="closePanel"
               onClick={() => setSelected(null)}
@@ -354,62 +447,119 @@ export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
               ×
             </button>
 
-            <div className="panelLabel">SELECTED DISTRICT</div>
+            <div className="panelLabel">
+              SELECTED DISTRICT
+            </div>
 
             <h2>{selectedData.name}</h2>
 
             <div
               className="panelRisk"
-              style={{ color: riskColor(selectedData.score) }}
+              style={{
+                color: riskColor(selectedData.score)
+              }}
             >
               {riskName(selectedData.score)}
               <strong>{selectedData.score}</strong>
             </div>
 
-            <div className="panelMetric">
-              <span>Rainfall</span>
-              <b>{selectedData.rainfall} mm</b>
+            <div className="intelligenceTitle">
+              QUICK INTELLIGENCE
             </div>
 
-            <div className="panelMetric">
-              <span>Soil saturation</span>
-              <b>{selectedData.saturation}%</b>
-            </div>
+            <div className="intelligenceGrid">
 
-            <div className="panelMetric">
-              <span>Slope</span>
-              <b>{selectedData.slope}°</b>
-            </div>
+              <IntelligenceRow
+                icon="🌧"
+                label="Rainfall"
+                value={rainfallStatus(selectedData.rainfall)}
+              />
 
-            <div className="panelMetric">
-              <span>Recent landslides</span>
-              <b>{selectedData.landslides}</b>
-            </div>
+              <IntelligenceRow
+                icon="💧"
+                label="Soil"
+                value={soilStatus(selectedData.saturation)}
+              />
 
-            <div className="panelMetric">
-              <span>Road blockages</span>
-              <b>{selectedData.blockages}</b>
+              <IntelligenceRow
+                icon="⛰"
+                label="Landslides"
+                value={landslideStatus(selectedData.landslides)}
+              />
+
+              <IntelligenceRow
+                icon="📐"
+                label="Slope"
+                value={slopeStatus(selectedData.slope)}
+              />
+
+              <IntelligenceRow
+                icon="🛣"
+                label="Roads"
+                value={roadStatus(selectedData.blockages)}
+              />
+
+              <IntelligenceRow
+                icon="☁"
+                label="Weather"
+                value={weatherStatus(
+                  selectedData.rainfall,
+                  selectedData.humidity
+                )}
+              />
+
+              <IntelligenceRow
+                icon="⚠"
+                label="Alert"
+                value={alertStatus(
+                  selectedData.score,
+                  selectedData.rainfall,
+                  selectedData.landslides
+                )}
+              />
+
             </div>
 
             <button
               className="openDistrict"
-              onClick={() => onDistrictSelect?.(selectedData.name)}
+              onClick={() =>
+                onDistrictSelect?.(selectedData.name)
+              }
             >
               View Full Area Risk →
             </button>
+
           </div>
         )}
 
       </div>
 
       <div className="mapLegendNew">
-        <span><i className="legendCritical"></i> Critical</span>
-        <span><i className="legendHigh"></i> High</span>
-        <span><i className="legendModerate"></i> Moderate</span>
-        <span><i className="legendLow"></i> Low</span>
+
+        <span>
+          <i className="legendCritical"></i>
+          Critical
+        </span>
+
+        <span>
+          <i className="legendHigh"></i>
+          High
+        </span>
+
+        <span>
+          <i className="legendModerate"></i>
+          Moderate
+        </span>
+
+        <span>
+          <i className="legendLow"></i>
+          Low
+        </span>
+
         <small>
-          Risk zones are derived from SafeBhoomi's current district risk dataset.
+          Click a district or hazard zone for quick intelligence.
         </small>
+
       </div>
 
       {loading && (
