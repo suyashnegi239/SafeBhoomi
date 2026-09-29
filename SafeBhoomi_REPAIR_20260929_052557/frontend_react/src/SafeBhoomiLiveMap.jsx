@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 
-import * as maplibregl from "maplibre-gl";
+import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 const UK_BOUNDS = [
@@ -217,277 +217,103 @@ export default function SafeBhoomiLiveMap({
   }, []);
 
   // ==========================================================
-  // REAL SAFEBHOOMI RISK ENGINE
+  // REAL BACKEND RISK
   // ==========================================================
 
   useEffect(() => {
-
     let alive = true;
 
-    async function loadLiveRisk() {
-
+    async function getRisk() {
       setRiskLoading(true);
 
-      const districts = [
-        "Almora",
-        "Bageshwar",
-        "Chamoli",
-        "Champawat",
-        "Dehradun",
-        "Haridwar",
-        "Nainital",
-        "Pauri Garhwal",
-        "Pithoragarh",
-        "Rudraprayag",
-        "Tehri Garhwal",
-        "Udham Singh Nagar",
-        "Uttarkashi",
-      ];
-
-      const apiBase =
-        import.meta.env.VITE_API_BASE || "";
-
-      const endpoint =
-        `${apiBase}/api/risk/unified`;
-
       try {
+        /*
+         * IMPORTANT:
+         * Your existing backend endpoint is /unified.
+         *
+         * This uses the Vite/backend proxy if configured.
+         * It does NOT create fake risk values.
+         */
 
-        const responses =
-          await Promise.allSettled(
-            districts.map(async (district) => {
+        const response = await fetch(
+          "/unified",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
 
-              const response =
-                await fetch(
-                  endpoint,
-                  {
-                    method: "POST",
-
-                    headers: {
-                      "Content-Type":
-                        "application/json",
-                    },
-
-                    body: JSON.stringify({
-                      district: district,
-                    }),
-                  }
-                );
-
-              if (!response.ok) {
-                throw new Error(
-                  `${district}: HTTP ${response.status}`
-                );
-              }
-
-              const result =
-                await response.json();
-
-              return {
-                district,
-                result,
-              };
-
-            })
-          );
-
-        if (!alive) return;
-
-        const liveRows = [];
-
-        let successCount = 0;
-
-        responses.forEach((item) => {
-
-          if (item.status !== "fulfilled") {
-
-            console.warn(
-              "Risk request failed:",
-              item.reason
-            );
-
-            return;
+            body: JSON.stringify({
+              district: "Uttarakhand",
+            }),
           }
+        );
 
-          successCount++;
-
-          const district =
-            item.value.district;
-
-          const result =
-            item.value.result;
-
-          const data =
-            result?.result ||
-            result?.data ||
-            result ||
-            {};
-
-          liveRows.push({
-
-            district,
-
-            score: Number(
-              data.risk_score ??
-              data.riskScore ??
-              data.unified_risk_score ??
-              data.score ??
-              0
-            ),
-
-            risk_level:
-              data.risk_level ??
-              data.riskLevel ??
-              data.level ??
-              "",
-
-            rainfall: Number(
-              data.rainfall_24h ??
-              data.rainfall_mm ??
-              data.rainfall ??
-              0
-            ),
-
-            rainfall_7d: Number(
-              data.rainfall_7d ??
-              0
-            ),
-
-            humidity: Number(
-              data.humidity ??
-              data.humidity_pct ??
-              0
-            ),
-
-            soil: Number(
-              data.soil_saturation ??
-              data.soil_saturation_pct ??
-              0
-            ),
-
-            historical_susceptibility:
-              Number(
-                data.historical_susceptibility ??
-                0
-              ),
-
-            landslides: Number(
-              data.recent_landslides ??
-              data.landslides ??
-              0
-            ),
-
-            road_blockages: Number(
-              data.road_blockages ??
-              0
-            ),
-
-            slope: Number(
-              data.slope ??
-              data.slope_deg ??
-              0
-            ),
-
-          });
-
-        });
-
-        // ------------------------------------------------------
-        // MERGE LIVE RISK INTO EXISTING DISTRICT DATA
-        // ------------------------------------------------------
-
-        setDistricts((old) => {
-
-          const merged = new Map();
-
-          old.forEach((item) => {
-
-            const normalized =
-              normalize(item);
-
-            if (normalized) {
-
-              merged.set(
-                key(normalized.district),
-                normalized
-              );
-
-            }
-
-          });
-
-          liveRows.forEach((row) => {
-
-            const districtKey =
-              key(row.district);
-
-            const previous =
-              merged.get(districtKey) || {};
-
-            merged.set(
-              districtKey,
-              {
-                ...previous,
-                ...row,
-              }
-            );
-
-          });
-
-          return Array.from(
-            merged.values()
+        if (!response.ok) {
+          throw new Error(
+            `Risk API HTTP ${response.status}`
           );
-
-        });
-
-        if (successCount === 13) {
-
-          setMessage("");
-
-        } else if (successCount > 0) {
-
-          setMessage(
-            `Risk engine connected: ${successCount}/13 districts loaded.`
-          );
-
-        } else {
-
-          setMessage(
-            "Risk engine returned no district results."
-          );
-
         }
 
-      } catch (error) {
+        const result =
+          await response.json();
 
+        const rows = extractRows(result);
+
+        if (!rows.length) {
+          throw new Error(
+            "Risk API returned no district records."
+          );
+        }
+
+        if (alive) {
+          setDistricts((old) => {
+            const merged = new Map();
+
+            old.forEach((item) => {
+              merged.set(
+                key(item.district),
+                item
+              );
+            });
+
+            rows.forEach((item) => {
+              const k = key(item.district);
+
+              merged.set(k, {
+                ...(merged.get(k) || {}),
+                ...item,
+              });
+            });
+
+            return [...merged.values()];
+          });
+
+          setMessage("");
+        }
+      } catch (error) {
         console.error(
-          "SafeBhoomi risk engine error:",
+          "SAFE BHOOMI RISK ERROR:",
           error
         );
 
         if (alive) {
-
           setMessage(
-            "Could not connect to the SafeBhoomi risk engine."
+            "Live risk engine unavailable. District map remains active."
           );
-
         }
-
       } finally {
-
         if (alive) {
           setRiskLoading(false);
         }
-
       }
-
     }
 
-    loadLiveRisk();
+    getRisk();
 
     return () => {
       alive = false;
     };
-
   }, []);
 
   // ==========================================================
