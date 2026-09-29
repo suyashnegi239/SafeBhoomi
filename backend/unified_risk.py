@@ -9,8 +9,13 @@ from pathlib import Path
 # Dataset-backed district intelligence
 # ============================================================
 
-BACKEND_DIR = Path("/content/landslide_project/backend")
-PROJECT_DIR = Path("/content/landslide_project")
+# ------------------------------------------------------------
+# Deployment-safe project paths
+# Works locally in Colab AND when deployed on Render.
+# ------------------------------------------------------------
+BACKEND_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = BACKEND_DIR.parent
+
 DISTRICT_DATA = (
     PROJECT_DIR
     / "frontend_react"
