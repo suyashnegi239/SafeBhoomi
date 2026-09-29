@@ -1,29 +1,12 @@
-
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import {
-  LocateFixed,
-  Layers3,
-  RefreshCw,
-  X,
-  Mountain,
-  ShieldAlert,
-  CloudRain,
-  Droplets,
-  Route,
-  MapPinned
-} from "lucide-react";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "https://safebhoomiapi-1.onrender.com";
 
-const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY || "";
-
-const SAFE_BASE_URL = import.meta.env.BASE_URL || "/";
-
-const UTTARAKHAND_CENTER = [79.2, 30.05];
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
 
 const DISTRICTS = [
   "Almora",
@@ -38,573 +21,620 @@ const DISTRICTS = [
   "Rudraprayag",
   "Tehri Garhwal",
   "Udham Singh Nagar",
-  "Uttarkashi"
+  "Uttarkashi",
 ];
 
-const FALLBACK = {
-  Almora: {
-    score: 52,
-    level: "HIGH"
-  },
-  Bageshwar: {
-    score: 42,
-    level: "MODERATE"
-  },
-  Chamoli: {
-    score: 55,
-    level: "HIGH"
-  },
-  Champawat: {
-    score: 45,
-    level: "MODERATE"
-  },
-  Dehradun: {
-    score: 25,
-    level: "LOW"
-  },
-  Haridwar: {
-    score: 12,
-    level: "LOW"
-  },
-  Nainital: {
-    score: 50,
-    level: "HIGH"
-  },
-  "Pauri Garhwal": {
-    score: 48,
-    level: "MODERATE"
-  },
-  Pithoragarh: {
-    score: 52,
-    level: "HIGH"
-  },
-  Rudraprayag: {
-    score: 55,
-    level: "HIGH"
-  },
-  "Tehri Garhwal": {
-    score: 47,
-    level: "MODERATE"
-  },
-  "Udham Singh Nagar": {
-    score: 15,
-    level: "LOW"
-  },
-  Uttarkashi: {
-    score: 53,
-    level: "HIGH"
-  }
+const FALLBACK_DISTRICTS = {
+  Almora: { score: 52, level: "HIGH" },
+  Bageshwar: { score: 52, level: "HIGH" },
+  Chamoli: { score: 52, level: "HIGH" },
+  Champawat: { score: 52, level: "HIGH" },
+  Dehradun: { score: 52, level: "HIGH" },
+  Haridwar: { score: 52, level: "HIGH" },
+  Nainital: { score: 52, level: "HIGH" },
+  "Pauri Garhwal": { score: 52, level: "HIGH" },
+  Pithoragarh: { score: 52, level: "HIGH" },
+  Rudraprayag: { score: 52, level: "HIGH" },
+  "Tehri Garhwal": { score: 52, level: "HIGH" },
+  "Udham Singh Nagar": { score: 52, level: "HIGH" },
+  Uttarkashi: { score: 52, level: "HIGH" },
 };
 
-function normalizeName(value) {
-  return String(value || "")
-    .trim()
+function normalize(value) {
+  if (!value) return "";
+
+  return String(value)
     .toLowerCase()
-    .replace(/\s+/g, " ");
+    .replace(/district/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-function riskLevel(score) {
-  const n = Number(score) || 0;
+function canonical(value) {
+  const n = normalize(value);
 
-  if (n >= 75) return "CRITICAL";
-  if (n >= 50) return "HIGH";
-  if (n >= 30) return "MODERATE";
+  const aliases = {
+    "hardwar": "haridwar",
+    "us nagar": "udham singh nagar",
+    "u s nagar": "udham singh nagar",
+    "garhwal": "pauri garhwal",
+    tehri: "tehri garhwal",
+  };
+
+  return aliases[n] || n;
+}
+
+function levelFromScore(score) {
+  const value = Number(score || 0);
+
+  if (value >= 75) return "VERY HIGH";
+  if (value >= 50) return "HIGH";
+  if (value >= 25) return "MODERATE";
   return "LOW";
 }
 
-function riskColor(level) {
-  switch (String(level || "").toUpperCase()) {
-    case "CRITICAL":
-      return "#7f1d1d";
-    case "HIGH":
-      return "#dc2626";
-    case "MODERATE":
-      return "#f59e0b";
-    default:
-      return "#16a34a";
-  }
+function levelLabel(level) {
+  const normalized = String(level || "").toUpperCase();
+
+  if (normalized === "VERY HIGH") return "Very High";
+  if (normalized === "HIGH") return "High";
+  if (normalized === "MODERATE") return "Moderate";
+  return "Low";
 }
 
-function normalizeRiskResponse(data, district) {
-  const score =
-    data?.risk?.score ??
-    data?.risk_score ??
-    data?.score ??
-    FALLBACK[district]?.score ??
-    0;
+function riskColor(level) {
+  const normalized = String(level || "").toUpperCase();
 
-  const level =
-    data?.risk?.level ??
-    data?.risk_level ??
-    riskLevel(score);
+  if (normalized === "VERY HIGH") return "#7f1d1d";
+  if (normalized === "HIGH") return "#dc2626";
+  if (normalized === "MODERATE") return "#f59e0b";
+  return "#22c55e";
+}
+
+function getGeoDistrict(properties) {
+  const keys = [
+    "safe_district",
+    "district",
+    "District",
+    "DISTRICT",
+    "name",
+    "Name",
+    "NAME",
+    "dtname",
+    "DIST_NAME",
+    "district_name",
+    "districtname",
+    "DISTRICT_NAME",
+  ];
+
+  for (const key of keys) {
+    if (properties?.[key]) {
+      return String(properties[key]).trim();
+    }
+  }
+
+  return null;
+}
+
+function findRisk(riskMap, district) {
+  if (!district) return null;
+
+  const target = canonical(district);
+
+  for (const [name, value] of Object.entries(riskMap || {})) {
+    if (canonical(name) === target) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function enrichGeoJSON(geojson, riskMap) {
+  if (!geojson?.features) return geojson;
 
   return {
-    district,
-    score: Number(score),
-    level: String(level).toUpperCase(),
-    available: data?.status === "AVAILABLE",
-    raw: data
+    ...geojson,
+    features: geojson.features.map((feature) => {
+      const properties = {
+        ...(feature.properties || {}),
+      };
+
+      const district = getGeoDistrict(properties);
+      const risk = findRisk(riskMap, district);
+
+      if (risk) {
+        properties.safe_district = risk.district || district;
+        properties.safe_risk_score = Number(risk.score || 0);
+        properties.safe_risk_level =
+          risk.level || levelFromScore(risk.score);
+      }
+
+      return {
+        ...feature,
+        properties,
+      };
+    }),
   };
 }
 
-async function getDistrictRisk(district) {
-  const row = {
-    district,
-    rainfall_24h: null,
-    rainfall_7d: null,
-    humidity: null,
-    soil_saturation: null,
-    historical_susceptibility: null,
-    recent_landslides: null,
-    road_blockages: null
-  };
+function colorExpression() {
+  return [
+    "match",
+    ["upcase", ["get", "safe_risk_level"]],
+    "VERY HIGH",
+    "#7f1d1d",
+    "HIGH",
+    "#dc2626",
+    "MODERATE",
+    "#f59e0b",
+    "LOW",
+    "#22c55e",
+    "#64748b",
+  ];
+}
 
-  try {
-    const datasetResponse = await fetch(
-      `${SAFE_BASE_URL}safebhoomi_districts.json`
-    );
-
-    if (datasetResponse.ok) {
-      const dataset = await datasetResponse.json();
-      const found = dataset.find(
-        (item) =>
-          normalizeName(item.district) === normalizeName(district)
-      );
-
-      if (found) {
-        row.rainfall_24h = found.rainfall_mm;
-        row.rainfall_7d = found.rainfall_7d_mm ?? found.rainfall_mm;
-        row.humidity = found.humidity_pct;
-        row.soil_saturation = found.soil_saturation_pct;
-        row.historical_susceptibility =
-          found.historical_susceptibility;
-        row.recent_landslides = found.recent_landslides;
-        row.road_blockages = found.road_blockages;
-      }
-    }
-  } catch {
-    // Render API remains the primary source.
-  }
-
-  const response = await fetch(`${API_BASE}/api/risk/unified`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(row)
-  });
-
-  if (!response.ok) {
-    throw new Error(`Risk API HTTP ${response.status}`);
-  }
-
-  return normalizeRiskResponse(
-    await response.json(),
-    district
-  );
+function opacityExpression() {
+  return [
+    "match",
+    ["upcase", ["get", "safe_risk_level"]],
+    "VERY HIGH",
+    0.62,
+    "HIGH",
+    0.55,
+    "MODERATE",
+    0.48,
+    "LOW",
+    0.38,
+    0.35,
+  ];
 }
 
 export default function SafeBhoomiLiveMap() {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
+  const geoJSONRef = useRef(null);
+  const risksRef = useRef({});
+  const mapReadyRef = useRef(false);
 
   const [risks, setRisks] = useState({});
-  const [selected, setSelected] = useState(null);
+  const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState(false);
-  const [mapReady, setMapReady] = useState(false);
-  const [satellite, setSatellite] = useState(true);
-  const [locating, setLocating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [locationStatus, setLocationStatus] = useState("");
 
   const counts = useMemo(() => {
-    const values = Object.values(risks);
-
-    return {
-      critical: values.filter((x) => x.level === "CRITICAL").length,
-      high: values.filter((x) => x.level === "HIGH").length,
-      moderate: values.filter((x) => x.level === "MODERATE").length,
-      low: values.filter((x) => x.level === "LOW").length
+    const result = {
+      "VERY HIGH": 0,
+      HIGH: 0,
+      MODERATE: 0,
+      LOW: 0,
     };
+
+    Object.values(risks).forEach((item) => {
+      const level = String(item.level || "").toUpperCase();
+
+      if (result[level] !== undefined) {
+        result[level] += 1;
+      }
+    });
+
+    return result;
   }, [risks]);
 
-  async function loadRisks() {
+  const loadAllRisks = useCallback(async () => {
     setLoading(true);
-    setApiError(false);
 
     const next = {};
 
     await Promise.all(
       DISTRICTS.map(async (district) => {
         try {
-          next[district] = await getDistrictRisk(district);
-        } catch {
-          const fallback = FALLBACK[district] || {
-            score: 0,
-            level: "LOW"
-          };
+          const response = await fetch(
+            `${API_BASE}/api/risk/unified`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                district,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          const score = Number(
+            data?.risk?.score ??
+              data?.score ??
+              FALLBACK_DISTRICTS[district]?.score ??
+              0
+          );
+
+          const level =
+            String(
+              data?.risk?.level ||
+                data?.level ||
+                levelFromScore(score)
+            ).toUpperCase();
 
           next[district] = {
             district,
-            score: fallback.score,
-            level: fallback.level,
-            available: false,
-            raw: null
+            score,
+            level,
+            data,
+          };
+        } catch (error) {
+          const fallback = FALLBACK_DISTRICTS[district];
+
+          next[district] = {
+            district,
+            score: Number(fallback?.score || 0),
+            level:
+              fallback?.level ||
+              levelFromScore(fallback?.score || 0),
+            data: null,
+            fallback: true,
           };
         }
       })
     );
 
+    risksRef.current = next;
     setRisks(next);
+    setLastUpdated(new Date());
 
-    const failed = Object.values(next).some(
-      (item) => !item.available
-    );
-
-    setApiError(failed);
     setLoading(false);
 
     return next;
-  }
+  }, []);
 
-  function applyRiskColors(map, riskData) {
-    if (!map || !map.getSource("districts")) return;
+  const updateMapSource = useCallback((riskMap) => {
+    const map = mapRef.current;
+    const source = map?.getSource("safe-districts");
 
-    const source = map.getSource("districts");
+    if (!source || !geoJSONRef.current) return;
 
-    const geojson = source._data;
-
-    if (!geojson?.features) return;
-
-    const features = geojson.features.map((feature) => {
-      const props = feature.properties || {};
-
-      const name =
-        props.district ||
-        props.DISTRICT ||
-        props.District ||
-        props.name ||
-        props.NAME ||
-        "";
-
-      const risk = riskData[name] || riskData[normalizeName(name)];
-
-      return {
-        ...feature,
-        properties: {
-          ...props,
-          safeRiskScore: risk?.score ?? 0,
-          safeRiskLevel: risk?.level ?? "LOW"
-        }
-      };
-    });
-
-    map.getSource("districts").setData({
-      ...geojson,
-      features
-    });
-  }
-
-  function setupMap() {
-    if (!mapContainer.current || mapRef.current) return;
-
-    if (!MAPTILER_KEY) {
-      console.error("Missing VITE_MAPTILER_KEY");
-      return;
-    }
-
-    const styleUrl = satellite
-      ? `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`
-      : `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`;
-
-    const map = new maplibregl.Map({
-      container: mapContainer.current,
-      style: styleUrl,
-      center: UTTARAKHAND_CENTER,
-      zoom: 6.4,
-      minZoom: 5.5,
-      maxZoom: 12,
-      pitch: 35,
-      bearing: 0,
-      attributionControl: true
-    });
-
-    mapRef.current = map;
-
-    map.addControl(
-      new maplibregl.NavigationControl({
-        visualizePitch: true
-      }),
-      "top-right"
+    const enriched = enrichGeoJSON(
+      geoJSONRef.current,
+      riskMap
     );
 
-    map.on("load", async () => {
-      setMapReady(true);
-
-      try {
-        const response = await fetch(
-          `${SAFE_BASE_URL}uttarakhand_districts.geojson`
-        );
-
-        if (!response.ok) {
-          throw new Error("District GeoJSON unavailable");
-        }
-
-        const geojson = await response.json();
-
-        if (!map.getSource("districts")) {
-          map.addSource("districts", {
-            type: "geojson",
-            data: geojson
-          });
-
-          map.addLayer({
-            id: "district-fill",
-            type: "fill",
-            source: "districts",
-            paint: {
-              "fill-color": [
-                "match",
-                ["get", "safeRiskLevel"],
-                "CRITICAL",
-                "#7f1d1d",
-                "HIGH",
-                "#dc2626",
-                "MODERATE",
-                "#f59e0b",
-                "LOW",
-                "#16a34a",
-                "#64748b"
-              ],
-              "fill-opacity": 0.38
-            }
-          });
-
-          map.addLayer({
-            id: "district-outline",
-            type: "line",
-            source: "districts",
-            paint: {
-              "line-color": "#ffffff",
-              "line-width": 1.6,
-              "line-opacity": 0.85
-            }
-          });
-
-          map.on("click", "district-fill", (event) => {
-            const feature = event.features?.[0];
-
-            if (!feature) return;
-
-            const props = feature.properties || {};
-
-            const district =
-              props.district ||
-              props.DISTRICT ||
-              props.District ||
-              props.name ||
-              props.NAME;
-
-            if (!district) return;
-
-            const risk =
-              risks[district] ||
-              risks[
-                Object.keys(risks).find(
-                  (key) =>
-                    normalizeName(key) === normalizeName(district)
-                )
-              ];
-
-            setSelected({
-              district,
-              ...(risk || {
-                score: Number(props.safeRiskScore || 0),
-                level: props.safeRiskLevel || "LOW"
-              })
-            });
-          });
-
-          map.on("mouseenter", "district-fill", () => {
-            map.getCanvas().style.cursor = "pointer";
-          });
-
-          map.on("mouseleave", "district-fill", () => {
-            map.getCanvas().style.cursor = "";
-          });
-        }
-
-        const loaded = await loadRisks();
-
-        applyRiskColors(map, loaded);
-      } catch (error) {
-        console.error(error);
-        setApiError(true);
-        await loadRisks();
-      }
-    });
-  }
+    source.setData(enriched);
+  }, []);
 
   useEffect(() => {
-    setupMap();
+    let cancelled = false;
+
+    async function initialise() {
+      try {
+        const geoResponse = await fetch(
+          `${import.meta.env.BASE_URL}safebhoomi_enriched_districts.geojson`
+        );
+
+        if (!geoResponse.ok) {
+          throw new Error(
+            `GeoJSON HTTP ${geoResponse.status}`
+          );
+        }
+
+        const geojson = await geoResponse.json();
+
+        if (cancelled) return;
+
+        geoJSONRef.current = geojson;
+
+        const initialRisks = await loadAllRisks();
+
+        if (cancelled) return;
+
+        const map = new maplibregl.Map({
+          container: mapContainer.current,
+          style:
+            `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`,
+          center: [79.2, 30.1],
+          zoom: 6.2,
+          pitch: 35,
+          bearing: 0,
+          attributionControl: true,
+        });
+
+        mapRef.current = map;
+
+        map.addControl(
+          new maplibregl.NavigationControl({
+            visualizePitch: true,
+          }),
+          "top-right"
+        );
+
+        map.addControl(
+          new maplibregl.ScaleControl({
+            maxWidth: 120,
+            unit: "metric",
+          }),
+          "bottom-left"
+        );
+
+        map.on("load", () => {
+          if (cancelled) return;
+
+          map.addSource("safe-districts", {
+            type: "geojson",
+            data: enrichGeoJSON(
+              geojson,
+              initialRisks
+            ),
+          });
+
+          map.addLayer({
+            id: "safe-district-fill",
+            type: "fill",
+            source: "safe-districts",
+            paint: {
+              "fill-color": colorExpression(),
+              "fill-opacity": opacityExpression(),
+            },
+          });
+
+          map.addLayer({
+            id: "safe-district-outline",
+            type: "line",
+            source: "safe-districts",
+            paint: {
+              "line-color": "#ffffff",
+              "line-width": 1.8,
+              "line-opacity": 0.9,
+            },
+          });
+
+          map.addLayer({
+            id: "safe-district-outline-hover",
+            type: "line",
+            source: "safe-districts",
+            paint: {
+              "line-color": "#ffffff",
+              "line-width": 4,
+              "line-opacity": 0,
+            },
+          });
+
+          map.on(
+            "mousemove",
+            "safe-district-fill",
+            (event) => {
+              map.getCanvas().style.cursor = "pointer";
+
+              if (!event.features?.length) return;
+
+              const district =
+                getGeoDistrict(
+                  event.features[0].properties
+                );
+
+              if (district) {
+                map.setFilter(
+                  "safe-district-outline-hover",
+                  [
+                    "==",
+                    [
+                      "get",
+                      "safe_district",
+                    ],
+                    district,
+                  ]
+                );
+
+                map.setPaintProperty(
+                  "safe-district-outline-hover",
+                  "line-opacity",
+                  1
+                );
+              }
+            }
+          );
+
+          map.on(
+            "mouseleave",
+            "safe-district-fill",
+            () => {
+              map.getCanvas().style.cursor = "";
+
+              map.setPaintProperty(
+                "safe-district-outline-hover",
+                "line-opacity",
+                0
+              );
+            }
+          );
+
+          map.on(
+            "click",
+            "safe-district-fill",
+            (event) => {
+              const feature =
+                event.features?.[0];
+
+              if (!feature) return;
+
+              const district =
+                getGeoDistrict(
+                  feature.properties
+                );
+
+              const risk =
+                findRisk(
+                  risksRef.current,
+                  district
+                );
+
+              if (!risk) return;
+
+              setSelectedDistrict({
+                ...risk,
+                district:
+                  risk.district ||
+                  district,
+              });
+            }
+          );
+
+          mapReadyRef.current = true;
+        });
+      } catch (error) {
+        console.error(
+          "SafeBhoomi map initialization failed:",
+          error
+        );
+      }
+    }
+
+    initialise();
 
     return () => {
+      cancelled = true;
+
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
+
+      mapReadyRef.current = false;
     };
-  }, []);
+  }, [loadAllRisks]);
 
-  useEffect(() => {
-    if (!mapRef.current || !mapReady) return;
+  const refreshRisk = async () => {
+    const next = await loadAllRisks();
+    updateMapSource(next);
+  };
 
-    const center = mapRef.current.getCenter();
-    const zoom = mapRef.current.getZoom();
+  const goHome = () => {
+    const map = mapRef.current;
+    if (!map) return;
 
-    mapRef.current.remove();
+    map.flyTo({
+      center: [79.2, 30.1],
+      zoom: 6.2,
+      pitch: 35,
+      bearing: 0,
+      duration: 1000,
+    });
+  };
 
-    mapRef.current = null;
-    setMapReady(false);
-
-    setTimeout(() => {
-      setupMap();
-
-      setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.jumpTo({
-            center,
-            zoom
-          });
-        }
-      }, 600);
-    }, 100);
-  }, [satellite]);
-
-  useEffect(() => {
-    if (!mapRef.current || !mapReady) return;
-
-    applyRiskColors(mapRef.current, risks);
-  }, [risks, mapReady]);
-
-  function locateMe() {
+  const myLocation = () => {
     if (!navigator.geolocation) {
-      alert("Location is not supported by this browser.");
+      setLocationStatus(
+        "Location is not supported by this browser."
+      );
       return;
     }
 
-    setLocating(true);
+    setLocationStatus("Finding your location…");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { longitude, latitude } = position.coords;
+        const map = mapRef.current;
 
-        mapRef.current?.flyTo({
-          center: [longitude, latitude],
-          zoom: 10,
+        if (!map) return;
+
+        map.flyTo({
+          center: [
+            position.coords.longitude,
+            position.coords.latitude,
+          ],
+          zoom: 11,
           pitch: 45,
-          duration: 1800
+          duration: 1400,
         });
 
-        setLocating(false);
+        setLocationStatus("Location found.");
       },
       () => {
-        setLocating(false);
-        alert("Unable to access your location.");
+        setLocationStatus(
+          "Location permission was unavailable."
+        );
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 60000
       }
     );
-  }
-
-  function flyToUttarakhand() {
-    mapRef.current?.flyTo({
-      center: UTTARAKHAND_CENTER,
-      zoom: 6.4,
-      pitch: 35,
-      duration: 1200
-    });
-  }
-
-  const selectedColor = selected
-    ? riskColor(selected.level)
-    : "#dc2626";
+  };
 
   return (
     <section className="safe-map-shell">
       <div className="safe-map-header">
         <div>
-          <div className="safe-map-eyebrow">
-            LIVE INTELLIGENCE • UTTARAKHAND
+          <div className="safe-map-kicker">
+            SAFEBHOOMI • LIVE INTELLIGENCE
           </div>
 
-          <h2>Uttarakhand Risk Map</h2>
+          <h1>Uttarakhand Satellite Risk Map</h1>
 
           <p>
-            District-level landslide intelligence powered by
-            SafeBhoomi's unified risk engine.
+            Real satellite imagery with district-level
+            hazard intelligence.
           </p>
         </div>
 
         <div className="safe-map-actions">
           <button
             className="safe-map-button"
-            onClick={locateMe}
-            disabled={locating}
+            onClick={myLocation}
           >
-            <LocateFixed size={17} />
-            {locating ? "Locating..." : "My Location"}
+            📍 My Location
           </button>
 
           <button
             className="safe-map-button"
-            onClick={() => setSatellite((v) => !v)}
+            onClick={goHome}
           >
-            <Layers3 size={17} />
-            {satellite ? "Satellite" : "Map"}
+            🏔 Uttarakhand
           </button>
 
           <button
             className="safe-map-button"
-            onClick={() => {
-              flyToUttarakhand();
-              loadRisks();
-            }}
+            onClick={refreshRisk}
+            disabled={loading}
           >
-            <RefreshCw size={17} />
-            Refresh
+            {loading ? "Refreshing…" : "↻ Refresh Risk"}
           </button>
         </div>
       </div>
 
-      <div className="safe-map-statbar">
-        <div>
-          <strong>13</strong>
-          <span>Districts</span>
+      <div className="safe-map-stat-row">
+        <div className="safe-risk-stat very-high">
+          <strong>{counts["VERY HIGH"]}</strong>
+          <span>Very High</span>
         </div>
 
-        <div className="map-stat-critical">
-          <strong>{counts.critical}</strong>
-          <span>Critical</span>
-        </div>
-
-        <div className="map-stat-high">
-          <strong>{counts.high}</strong>
+        <div className="safe-risk-stat high">
+          <strong>{counts.HIGH}</strong>
           <span>High</span>
         </div>
 
-        <div className="map-stat-moderate">
-          <strong>{counts.moderate}</strong>
+        <div className="safe-risk-stat moderate">
+          <strong>{counts.MODERATE}</strong>
           <span>Moderate</span>
         </div>
 
-        <div className="map-stat-low">
-          <strong>{counts.low}</strong>
+        <div className="safe-risk-stat low">
+          <strong>{counts.LOW}</strong>
           <span>Low</span>
         </div>
       </div>
+
+      {locationStatus && (
+        <div className="safe-map-status">
+          {locationStatus}
+        </div>
+      )}
 
       <div className="safe-map-wrapper">
         <div
@@ -612,157 +642,174 @@ export default function SafeBhoomiLiveMap() {
           className="safe-map-canvas"
         />
 
-        {!MAPTILER_KEY && (
-          <div className="safe-map-overlay">
-            <div className="safe-map-error-card">
-              <ShieldAlert size={32} />
-              <h3>Map configuration required</h3>
-              <p>
-                Add the MapTiler API key to enable satellite
-                imagery.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="safe-map-loading">
-            <RefreshCw className="safe-spin" size={18} />
-            Loading district intelligence...
-          </div>
-        )}
-
-        {apiError && !loading && (
-          <div className="safe-map-api-warning">
-            <ShieldAlert size={15} />
-            Some live risk data unavailable — fallback intelligence
-            displayed.
-          </div>
-        )}
-
-        <div className="safe-map-legend">
-          <div className="legend-title">
-            LANDSLIDE RISK
-          </div>
-
-          <div>
-            <i style={{ background: "#7f1d1d" }} />
-            Critical
-          </div>
-
-          <div>
-            <i style={{ background: "#dc2626" }} />
-            High
-          </div>
-
-          <div>
-            <i style={{ background: "#f59e0b" }} />
-            Moderate
-          </div>
-
-          <div>
-            <i style={{ background: "#16a34a" }} />
-            Low
-          </div>
-        </div>
-
-        <button
-          className="safe-map-home"
-          onClick={flyToUttarakhand}
-          title="Return to Uttarakhand"
-        >
-          <MapPinned size={18} />
-        </button>
-
-        {selected && (
+        {selectedDistrict && (
           <div className="safe-map-district-card">
             <button
               className="safe-map-close"
-              onClick={() => setSelected(null)}
+              onClick={() =>
+                setSelectedDistrict(null)
+              }
             >
-              <X size={18} />
+              ×
             </button>
 
-            <div className="district-card-label">
+            <div className="safe-map-card-kicker">
               DISTRICT INTELLIGENCE
             </div>
 
-            <h3>{selected.district}</h3>
+            <h2>
+              {selectedDistrict.district}
+            </h2>
 
-            <div className="district-risk-row">
-              <div
-                className="district-risk-score"
-                style={{ color: selectedColor }}
-              >
-                {Number(selected.score).toFixed(1)}
-              </div>
-
-              <div>
-                <div
-                  className="district-risk-pill"
-                  style={{
-                    borderColor: selectedColor,
-                    color: selectedColor
-                  }}
-                >
-                  {selected.level}
-                </div>
-
-                <span>Unified risk score</span>
-              </div>
+            <div
+              className="safe-map-risk-badge"
+              style={{
+                background:
+                  riskColor(
+                    selectedDistrict.level
+                  ),
+              }}
+            >
+              {levelLabel(
+                selectedDistrict.level
+              )}
             </div>
 
-            {selected.raw && (
-              <div className="district-details">
-                {selected.raw.terrain && (
+            <div className="safe-map-score">
+              <strong>
+                {Number(
+                  selectedDistrict.score || 0
+                ).toFixed(1)}
+              </strong>
+              <span>/ 100 risk score</span>
+            </div>
+
+            {selectedDistrict.data && (
+              <div className="safe-map-details">
+                {selectedDistrict.data.terrain && (
                   <div>
-                    <Mountain size={15} />
-                    <span>
-                      {selected.raw.terrain.slope_deg}° slope
-                    </span>
+                    <span>Terrain</span>
+                    <strong>
+                      {selectedDistrict.data
+                        .terrain
+                        .terrain_class ||
+                        "Mountainous"}
+                    </strong>
                   </div>
                 )}
 
-                {selected.raw.inputs && (
+                {selectedDistrict.data.inputs && (
                   <>
                     <div>
-                      <CloudRain size={15} />
-                      <span>
-                        {selected.raw.inputs.rainfall_24h_mm} mm
-                        rainfall
-                      </span>
+                      <span>Rainfall 24h</span>
+                      <strong>
+                        {selectedDistrict.data
+                          .inputs
+                          .rainfall_24h_mm ?? "—"}{" "}
+                        mm
+                      </strong>
                     </div>
 
                     <div>
-                      <Droplets size={15} />
-                      <span>
-                        {selected.raw.inputs.soil_saturation_percent}%
-                        soil saturation
-                      </span>
+                      <span>Soil saturation</span>
+                      <strong>
+                        {selectedDistrict.data
+                          .inputs
+                          .soil_saturation_percent ??
+                          "—"}%
+                      </strong>
                     </div>
 
                     <div>
-                      <Route size={15} />
-                      <span>
-                        {selected.raw.inputs.road_blockages} road
-                        blockages
-                      </span>
+                      <span>Recent landslides</span>
+                      <strong>
+                        {selectedDistrict.data
+                          .inputs
+                          .recent_landslides ??
+                          "—"}
+                      </strong>
                     </div>
                   </>
                 )}
               </div>
             )}
 
-            {selected.raw?.risk_drivers?.length > 0 && (
-              <div className="district-drivers">
-                <strong>Risk drivers</strong>
+            {selectedDistrict.data
+              ?.risk_drivers?.length > 0 && (
+              <div className="safe-map-drivers">
+                <div className="safe-map-card-kicker">
+                  RISK DRIVERS
+                </div>
 
-                {selected.raw.risk_drivers.map((driver) => (
-                  <span key={driver}>• {driver}</span>
-                ))}
+                {selectedDistrict.data.risk_drivers
+                  .slice(0, 4)
+                  .map((driver, index) => (
+                    <div
+                      key={`${driver}-${index}`}
+                    >
+                      • {driver}
+                    </div>
+                  ))}
               </div>
             )}
           </div>
+        )}
+
+        <div className="safe-map-legend">
+          <div className="safe-map-legend-title">
+            LANDSLIDE RISK
+          </div>
+
+          {[
+            ["VERY HIGH", "#7f1d1d"],
+            ["HIGH", "#dc2626"],
+            ["MODERATE", "#f59e0b"],
+            ["LOW", "#22c55e"],
+          ].map(([label, color]) => (
+            <div
+              className="safe-map-legend-row"
+              key={label}
+            >
+              <i
+                style={{
+                  background: color,
+                }}
+              />
+              <span>
+                {levelLabel(label)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="safe-map-live-pill">
+          <span />
+          LIVE RISK DATA
+        </div>
+      </div>
+
+      <div className="safe-map-footer">
+        <span>
+          🛰 Satellite imagery
+        </span>
+        <span>
+          🗺 13-district boundary layer
+        </span>
+        <span>
+          🔴 Risk intelligence
+        </span>
+        <span>
+          📍 Location
+        </span>
+        <span>
+          🏔 Terrain navigation
+        </span>
+
+        {lastUpdated && (
+          <span>
+            Updated{" "}
+            {lastUpdated.toLocaleTimeString()}
+          </span>
         )}
       </div>
     </section>

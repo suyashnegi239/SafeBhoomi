@@ -6142,3 +6142,728 @@ body {
     width: calc(100% - 20px);
   }
 }
+
+
+
+/* SAFEBHOOMI FINAL RISK MAP REPAIR */
+
+.safebhoomi-live-map {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.safebhoomi-map-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.safebhoomi-eyebrow,
+.district-card-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  opacity: 0.62;
+  margin-bottom: 7px;
+}
+
+.safebhoomi-map-heading h2 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.05;
+}
+
+.safebhoomi-map-heading p {
+  margin: 9px 0 0;
+  opacity: 0.62;
+  font-size: 14px;
+}
+
+.safebhoomi-map-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.safebhoomi-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255,255,255,0.13);
+  background: rgba(12,17,22,0.82);
+  color: inherit;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.safebhoomi-map-btn:hover {
+  border-color: rgba(255,255,255,0.3);
+  transform: translateY(-1px);
+}
+
+.safebhoomi-map-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.safebhoomi-map-shell {
+  position: relative;
+  width: 100%;
+  height: min(72vh, 720px);
+  min-height: 540px;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.11);
+  box-shadow: 0 25px 70px rgba(0,0,0,0.28);
+}
+
+.safebhoomi-map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.safebhoomi-map-canvas .maplibregl-map {
+  width: 100%;
+  height: 100%;
+}
+
+.safebhoomi-map-loading {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(8,12,16,0.9);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(16px);
+  font-size: 13px;
+  font-weight: 700;
+  z-index: 10;
+}
+
+.safebhoomi-map-warning {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: min(600px, calc(100% - 32px));
+  padding: 10px 13px;
+  border-radius: 11px;
+  background: rgba(65,34,7,0.94);
+  border: 1px solid rgba(255,174,0,0.3);
+  color: #ffd98a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.safebhoomi-map-warning button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.safebhoomi-risk-legend {
+  position: absolute;
+  left: 16px;
+  bottom: 52px;
+  z-index: 12;
+  min-width: 165px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: rgba(7,11,15,0.86);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+}
+
+.legend-title {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.17em;
+  opacity: 0.55;
+  margin-bottom: 9px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  margin: 7px 0;
+}
+
+.legend-item strong {
+  margin-left: auto;
+  min-width: 18px;
+  text-align: right;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.safebhoomi-district-card {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  z-index: 15;
+  width: min(350px, calc(100% - 32px));
+  padding: 18px;
+  border-radius: 17px;
+  background: rgba(8,12,16,0.93);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.3);
+}
+
+.safebhoomi-card-close {
+  position: absolute;
+  right: 11px;
+  top: 11px;
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: inherit;
+  cursor: pointer;
+}
+
+.safebhoomi-district-card h3 {
+  margin: 0 35px 14px 0;
+  font-size: 25px;
+}
+
+.district-risk-main {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.045);
+}
+
+.district-risk-score {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.district-risk-level {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.district-risk-label {
+  margin-top: 3px;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.district-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.district-stats > div {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.045);
+}
+
+.district-stats span {
+  display: block;
+  font-size: 9px;
+  opacity: 0.48;
+  margin-bottom: 4px;
+}
+
+.district-stats strong {
+  font-size: 13px;
+}
+
+.district-terrain {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: rgba(255,255,255,0.045);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.district-drivers {
+  margin-top: 12px;
+}
+
+.district-drivers-title {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  opacity: 0.5;
+  margin-bottom: 7px;
+}
+
+.district-driver {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 10px;
+  line-height: 1.35;
+  margin: 5px 0;
+  opacity: 0.8;
+}
+
+.district-driver span {
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.safebhoomi-map-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 11;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 8px 12px;
+  background: rgba(5,8,11,0.82);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 9px;
+  opacity: 0.86;
+}
+
+.safebhoomi-spin {
+  animation: safebhoomi-spin 0.9s linear infinite;
+}
+
+@keyframes safebhoomi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 850px) {
+  .safebhoomi-map-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .safebhoomi-map-actions {
+    justify-content: flex-start;
+  }
+
+  .safebhoomi-map-shell {
+    min-height: 520px;
+    height: 70vh;
+  }
+
+  .safebhoomi-risk-legend {
+    bottom: 52px;
+    left: 10px;
+  }
+
+  .safebhoomi-district-card {
+    right: 10px;
+    top: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .safebhoomi-map-btn {
+    padding: 8px 9px;
+    font-size: 10px;
+  }
+
+  .safebhoomi-map-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .safebhoomi-map-shell {
+    min-height: 480px;
+    border-radius: 16px;
+  }
+
+  .safebhoomi-risk-legend {
+    min-width: 145px;
+    padding: 10px;
+  }
+
+  .safebhoomi-map-footer {
+    gap: 7px;
+    font-size: 8px;
+  }
+}
+
+/* SAFEBHOOMI FINAL LIVE MAP */
+
+.safe-map-shell {
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 0 40px;
+}
+
+.safe-map-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.safe-map-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  opacity: 0.62;
+  margin-bottom: 8px;
+}
+
+.safe-map-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.safe-map-header p {
+  margin: 12px 0 0;
+  opacity: 0.68;
+}
+
+.safe-map-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.safe-map-button {
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: inherit;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  backdrop-filter: blur(12px);
+}
+
+.safe-map-button:hover {
+  background: rgba(255,255,255,0.14);
+}
+
+.safe-map-button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.safe-map-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.safe-risk-stat {
+  min-height: 72px;
+  padding: 13px 15px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.055);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.safe-risk-stat strong {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.safe-risk-stat span {
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.62;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.safe-risk-stat.very-high strong {
+  color: #fca5a5;
+}
+
+.safe-risk-stat.high strong {
+  color: #f87171;
+}
+
+.safe-risk-stat.moderate strong {
+  color: #fbbf24;
+}
+
+.safe-risk-stat.low strong {
+  color: #4ade80;
+}
+
+.safe-map-status {
+  margin: 8px 0;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.safe-map-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 680px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+  background: #101820;
+}
+
+.safe-map-canvas {
+  position: absolute;
+  inset: 0;
+  min-height: 680px;
+}
+
+.safe-map-canvas .maplibregl-canvas {
+  outline: none;
+}
+
+.safe-map-legend {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 5;
+  padding: 13px 15px;
+  border-radius: 13px;
+  background: rgba(7,13,19,0.82);
+  border: 1px solid rgba(255,255,255,0.13);
+  backdrop-filter: blur(14px);
+  color: white;
+  min-width: 145px;
+}
+
+.safe-map-legend-title {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  margin-bottom: 9px;
+  opacity: 0.65;
+}
+
+.safe-map-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  margin: 6px 0;
+}
+
+.safe-map-legend-row i {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.12);
+}
+
+.safe-map-live-pill {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(7,13,19,0.8);
+  border: 1px solid rgba(255,255,255,0.13);
+  backdrop-filter: blur(14px);
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.safe-map-live-pill span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 12px #22c55e;
+}
+
+.safe-map-district-card {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 10;
+  width: min(330px, calc(100% - 36px));
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(7,13,19,0.91);
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(18px);
+  color: white;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+
+.safe-map-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.safe-map-card-kicker {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  opacity: 0.52;
+  margin-bottom: 7px;
+}
+
+.safe-map-district-card h2 {
+  margin: 0 0 10px;
+  font-size: 25px;
+}
+
+.safe-map-risk-badge {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.safe-map-score {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: 17px 0;
+}
+
+.safe-map-score strong {
+  font-size: 38px;
+  line-height: 1;
+}
+
+.safe-map-score span {
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.safe-map-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.safe-map-details > div {
+  padding: 9px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+}
+
+.safe-map-details span {
+  display: block;
+  font-size: 9px;
+  opacity: 0.52;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.safe-map-details strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.safe-map-drivers {
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 11px;
+  line-height: 1.7;
+  opacity: 0.82;
+}
+
+.safe-map-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  padding: 13px 2px;
+  font-size: 10px;
+  opacity: 0.55;
+}
+
+@media (max-width: 800px) {
+  .safe-map-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .safe-map-actions {
+    justify-content: flex-start;
+  }
+
+  .safe-map-stat-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .safe-map-wrapper,
+  .safe-map-canvas {
+    min-height: 570px;
+  }
+}
