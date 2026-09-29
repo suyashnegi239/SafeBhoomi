@@ -4,6 +4,8 @@ import SafeBhoomiSafeRoute from "./SafeBhoomiSafeRoute";
 import SafeBhoomiEmergency from "./SafeBhoomiEmergency";
 import SafeBhoomiSimulation from "./SafeBhoomiSimulation";
 import {
+
+const SAFE_BASE_URL = import.meta.env.BASE_URL || "/";
   Activity, Map, ShieldAlert, Route, Brain, Radio,
   Menu, X, PhoneCall, CloudRain, Mountain, Play,
   RefreshCw, Navigation, Wifi, WifiOff
@@ -231,7 +233,7 @@ const analyzeWithAI = async () => {
 
     try {
       // Load the real SafeBhoomi district dataset
-      const datasetResponse = await fetch("/safebhoomi_districts.json");
+      const datasetResponse = await fetch(`${SAFE_BASE_URL}safebhoomi_districts.json`);
 
       if (!datasetResponse.ok) {
         throw new Error("District dataset unavailable");

@@ -9,6 +9,8 @@ import React, {
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+const SAFE_BASE_URL = import.meta.env.BASE_URL || "/";
+
 const UK_BOUNDS = [
   [77.90, 28.55],
   [81.20, 31.55],
@@ -20,7 +22,7 @@ const SATELLITE_TILES =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 
 const DISTRICT_URL =
-  "/SafeBhoomi/safebhoomi_districts.json";
+  `${SAFE_BASE_URL}safebhoomi_districts.json`;
 
 const GEOJSON_URL =
   "/uttarakhand_districts.geojson";
