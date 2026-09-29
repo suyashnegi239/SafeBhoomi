@@ -6867,3 +6867,1024 @@ body {
     min-height: 570px;
   }
 }
+
+
+
+/* ============================================================
+   SAFEBHOOMI — PRONE AREA / STATE BOUNDARY MAP
+   ============================================================ */
+
+.safebhoomi-map-shell {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.safebhoomi-map-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.safebhoomi-map-kicker,
+.safebhoomi-route-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  opacity: .65;
+}
+
+.safebhoomi-map-header h2,
+.safebhoomi-route-heading h2 {
+  margin: 5px 0;
+  font-size: 24px;
+  font-weight: 850;
+}
+
+.safebhoomi-map-header p,
+.safebhoomi-route-heading p {
+  margin: 0;
+  opacity: .65;
+  font-size: 13px;
+}
+
+.safebhoomi-map-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.safebhoomi-map-button,
+.safebhoomi-route-button {
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(15,23,42,.88);
+  color: white;
+  border-radius: 9px;
+  padding: 9px 13px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.safebhoomi-map-button:hover,
+.safebhoomi-route-button:hover {
+  border-color: rgba(103,232,249,.8);
+  transform: translateY(-1px);
+}
+
+.safebhoomi-map-button:disabled,
+.safebhoomi-route-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.safebhoomi-map-statbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.safebhoomi-map-statbar > div {
+  min-width: 90px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: rgba(15,23,42,.82);
+  border: 1px solid rgba(255,255,255,.10);
+  display: flex;
+  flex-direction: column;
+}
+
+.safebhoomi-map-statbar strong {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.safebhoomi-map-statbar span {
+  margin-top: 3px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  opacity: .6;
+}
+
+.safebhoomi-map-statbar .critical strong {
+  color: #ef4444;
+}
+
+.safebhoomi-map-statbar .high strong {
+  color: #f97316;
+}
+
+.safebhoomi-map-statbar .moderate strong {
+  color: #facc15;
+}
+
+.safebhoomi-map-statbar .low strong {
+  color: #22c55e;
+}
+
+.safebhoomi-map-wrapper {
+  position: relative;
+  overflow: hidden;
+  min-height: 650px;
+  border-radius: 18px;
+  border: 1px solid rgba(103,232,249,.25);
+  background: #020617;
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.35),
+    inset 0 0 0 1px rgba(255,255,255,.04);
+}
+
+.safebhoomi-live-map {
+  position: absolute;
+  inset: 0;
+  min-height: 650px;
+}
+
+.safebhoomi-map-title-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  color: white;
+  background: rgba(2,6,23,.82);
+  border: 1px solid rgba(103,232,249,.55);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+
+.safebhoomi-map-title-badge strong {
+  font-size: 14px;
+  letter-spacing: .08em;
+}
+
+.safebhoomi-map-title-badge span {
+  font-size: 9px;
+  letter-spacing: .12em;
+  opacity: .65;
+}
+
+.safebhoomi-risk-legend {
+  position: absolute;
+  z-index: 5;
+  right: 16px;
+  bottom: 48px;
+  width: 190px;
+  padding: 13px;
+  border-radius: 12px;
+  color: white;
+  background: rgba(2,6,23,.88);
+  border: 1px solid rgba(255,255,255,.13);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 35px rgba(0,0,0,.32);
+}
+
+.legend-title {
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .10em;
+  margin-bottom: 9px;
+  opacity: .75;
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 0;
+  font-size: 11px;
+}
+
+.legend-row small {
+  opacity: .55;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  display: block;
+  border-radius: 50%;
+}
+
+.legend-dot.critical {
+  background: #ef4444;
+}
+
+.legend-dot.high {
+  background: #f97316;
+}
+
+.legend-dot.moderate {
+  background: #facc15;
+}
+
+.legend-dot.low {
+  background: #22c55e;
+}
+
+.legend-state {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,.10);
+  margin-top: 7px;
+  padding-top: 9px;
+  font-size: 10px;
+}
+
+.legend-state i {
+  width: 18px;
+  height: 4px;
+  display: block;
+  border-radius: 99px;
+  background: #67e8f9;
+  box-shadow: 0 0 8px #67e8f9;
+}
+
+.safebhoomi-selected-card {
+  position: absolute;
+  z-index: 6;
+  top: 16px;
+  right: 16px;
+  width: 210px;
+  padding: 14px;
+  color: white;
+  background: rgba(2,6,23,.90);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 12px;
+  backdrop-filter: blur(14px);
+}
+
+.selected-label {
+  font-size: 9px;
+  letter-spacing: .12em;
+  opacity: .55;
+}
+
+.selected-name {
+  margin: 5px 0 9px;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.selected-level {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: white;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.selected-score {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: .75;
+}
+
+.safebhoomi-map-footer {
+  position: absolute;
+  z-index: 5;
+  left: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(2,6,23,.82);
+  color: white;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .08em;
+  backdrop-filter: blur(10px);
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+}
+
+/* ============================================================
+   SAFE ROUTE
+   ============================================================ */
+
+.safebhoomi-route-panel {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(15,23,42,.72);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.safebhoomi-route-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.safebhoomi-route-result {
+  margin-top: 18px;
+}
+
+.safebhoomi-route-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border-radius: 11px;
+  background: rgba(2,6,23,.72);
+  border: 1px solid rgba(255,255,255,.09);
+}
+
+.route-risk-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.safebhoomi-route-status strong {
+  display: block;
+  font-size: 14px;
+}
+
+.safebhoomi-route-status span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  opacity: .6;
+}
+
+.safebhoomi-route-districts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.route-district {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(2,6,23,.65);
+  border: 1px solid rgba(255,255,255,.08);
+  font-size: 11px;
+}
+
+.route-district b {
+  font-size: 9px;
+}
+
+.safebhoomi-route-disclaimer {
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  font-size: 10px;
+  opacity: .55;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .safebhoomi-map-header,
+  .safebhoomi-route-heading {
+    flex-direction: column;
+  }
+
+  .safebhoomi-map-actions {
+    width: 100%;
+  }
+
+  .safebhoomi-map-wrapper,
+  .safebhoomi-live-map {
+    min-height: 540px;
+  }
+
+  .safebhoomi-risk-legend {
+    right: 10px;
+    bottom: 45px;
+    width: 165px;
+  }
+
+  .safebhoomi-selected-card {
+    top: auto;
+    bottom: 95px;
+    left: 10px;
+    right: auto;
+  }
+}
+
+
+/* ============================================================
+   SAFEBHOOMI — 3D SAFE ROUTE PLANNER
+   ============================================================ */
+
+.safebhoomi-route-planner {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  z-index: 30;
+  width: min(360px, calc(100% - 44px));
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(7, 16, 27, 0.91);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px);
+  color: #fff;
+}
+
+.safebhoomi-route-planner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+
+.safebhoomi-route-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  opacity: 0.55;
+}
+
+.safebhoomi-route-title {
+  margin-top: 3px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.safebhoomi-location-button,
+.safebhoomi-calculate-route {
+  width: 100%;
+  border: 0;
+  border-radius: 11px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.safebhoomi-location-button {
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  color: #baf8ff;
+  margin-bottom: 10px;
+}
+
+.safebhoomi-route-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  min-height: 45px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  margin-bottom: 10px;
+}
+
+.safebhoomi-route-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+}
+
+.safebhoomi-route-input-wrap input::placeholder {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.safebhoomi-calculate-route {
+  background: #fff;
+  color: #07101b;
+}
+
+.safebhoomi-calculate-route:disabled,
+.safebhoomi-location-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.safebhoomi-route-result {
+  margin-top: 11px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 229, 255, 0.075);
+  border: 1px solid rgba(0, 229, 255, 0.16);
+}
+
+.safebhoomi-route-result-title {
+  font-weight: 800;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.safebhoomi-route-stats {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.safebhoomi-route-stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.safebhoomi-route-note {
+  margin-top: 8px;
+  font-size: 10px;
+  opacity: 0.62;
+}
+
+.safebhoomi-route-error {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 59, 48, 0.12);
+  border: 1px solid rgba(255, 59, 48, 0.25);
+  color: #ffb7b2;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.safebhoomi-route-disclaimer {
+  margin-top: 10px;
+  font-size: 9px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+@media (max-width: 700px) {
+  .safebhoomi-route-planner {
+    top: 10px;
+    right: 10px;
+    width: min(330px, calc(100% - 20px));
+  }
+}
+
+
+/* ============================================================
+   SAFEBHOOMI ROUTE PLANNER
+   ============================================================ */
+
+.safebhoomi-route-planner {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  z-index: 1000;
+
+  width: min(365px, calc(100% - 44px));
+
+  padding: 17px;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(5, 15, 27, 0.96),
+      rgba(10, 27, 42, 0.93)
+    );
+
+  border: 1px solid rgba(255,255,255,0.13);
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.42);
+
+  backdrop-filter: blur(20px);
+
+  color: white;
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.safebhoomi-route-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 14px;
+}
+
+.safebhoomi-route-kicker {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+
+  color: rgba(255,255,255,0.48);
+
+  margin-bottom: 4px;
+}
+
+.safebhoomi-route-heading {
+  font-size: 17px;
+  line-height: 1.2;
+
+  font-weight: 800;
+}
+
+.safebhoomi-route-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 11px;
+
+  background: rgba(0,229,255,0.10);
+
+  border: 1px solid rgba(0,229,255,0.20);
+
+  color: #6ff6ff;
+}
+
+.safebhoomi-location-button,
+.safebhoomi-route-button {
+  width: 100%;
+
+  min-height: 43px;
+
+  border-radius: 11px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.safebhoomi-location-button:hover,
+.safebhoomi-route-button:hover {
+  transform: translateY(-1px);
+}
+
+.safebhoomi-location-button {
+  margin-bottom: 10px;
+
+  color: #bffaff;
+
+  background: rgba(0,229,255,0.08);
+
+  border: 1px solid rgba(0,229,255,0.23);
+}
+
+.safebhoomi-destination-box {
+  min-height: 45px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 0 12px;
+
+  margin-bottom: 10px;
+
+  border-radius: 11px;
+
+  background: rgba(255,255,255,0.075);
+
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.safebhoomi-destination-box svg {
+  flex: 0 0 auto;
+
+  color: rgba(255,255,255,0.65);
+}
+
+.safebhoomi-destination-box input {
+  width: 100%;
+
+  min-width: 0;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: white;
+
+  font-size: 13px;
+}
+
+.safebhoomi-destination-box input::placeholder {
+  color: rgba(255,255,255,0.43);
+}
+
+.safebhoomi-route-button {
+  color: #07101b;
+
+  background: white;
+
+  border: 0;
+}
+
+.safebhoomi-route-button:disabled,
+.safebhoomi-location-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.safebhoomi-route-success {
+  margin-top: 11px;
+
+  padding: 12px;
+
+  border-radius: 12px;
+
+  background: rgba(0,229,255,0.07);
+
+  border: 1px solid rgba(0,229,255,0.17);
+}
+
+.safebhoomi-success-title {
+  font-size: 13px;
+  font-weight: 800;
+
+  margin-bottom: 8px;
+}
+
+.safebhoomi-route-metrics {
+  display: flex;
+
+  gap: 16px;
+
+  flex-wrap: wrap;
+
+  font-size: 12px;
+}
+
+.safebhoomi-route-metrics > div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+.safebhoomi-route-detail {
+  margin-top: 8px;
+
+  font-size: 10px;
+
+  color: rgba(255,255,255,0.56);
+}
+
+.safebhoomi-route-error {
+  margin-top: 10px;
+
+  padding: 10px;
+
+  border-radius: 10px;
+
+  background: rgba(255,59,48,0.10);
+
+  border: 1px solid rgba(255,59,48,0.22);
+
+  color: #ffb8b3;
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+.safebhoomi-route-warning {
+  margin-top: 10px;
+
+  font-size: 9px;
+
+  line-height: 1.45;
+
+  color: rgba(255,255,255,0.38);
+}
+
+@media (max-width: 700px) {
+
+  .safebhoomi-route-planner {
+    top: 10px;
+    right: 10px;
+
+    width:
+      calc(100% - 20px);
+  }
+
+}
+
+
+/* ============================================================
+   SAFEBHOOMI — CURRENT LOCATION STATUS
+   ============================================================ */
+
+.safebhoomi-location-status {
+  position: absolute;
+
+  left: 22px;
+  bottom: 58px;
+
+  z-index: 900;
+
+  width: min(355px, calc(100% - 44px));
+
+  padding: 15px;
+
+  border-radius: 17px;
+
+  background:
+    rgba(7, 16, 27, 0.93);
+
+  border: 1px solid
+    rgba(255,255,255,0.13);
+
+  box-shadow:
+    0 18px 55px
+    rgba(0,0,0,0.38);
+
+  backdrop-filter:
+    blur(18px);
+
+  color: white;
+}
+
+.safebhoomi-location-status-low {
+  border-color:
+    rgba(32,217,139,0.35);
+
+  box-shadow:
+    0 18px 55px
+    rgba(32,217,139,0.10);
+}
+
+.safebhoomi-location-status-moderate {
+  border-color:
+    rgba(245,185,66,0.38);
+
+  box-shadow:
+    0 18px 55px
+    rgba(245,185,66,0.10);
+}
+
+.safebhoomi-location-status-high {
+  border-color:
+    rgba(255,77,77,0.42);
+
+  box-shadow:
+    0 18px 55px
+    rgba(255,77,77,0.12);
+}
+
+.safebhoomi-location-status-top {
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+}
+
+.safebhoomi-location-status-icon {
+  width: 37px;
+  height: 37px;
+
+  flex: 0 0 auto;
+
+  border-radius: 11px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 19px;
+  font-weight: 900;
+
+  background:
+    rgba(255,255,255,0.08);
+}
+
+.safebhoomi-location-status-low
+.safebhoomi-location-status-icon {
+  color: #20d98b;
+}
+
+.safebhoomi-location-status-moderate
+.safebhoomi-location-status-icon {
+  color: #f5b942;
+}
+
+.safebhoomi-location-status-high
+.safebhoomi-location-status-icon {
+  color: #ff4d4d;
+}
+
+.safebhoomi-location-status-kicker {
+  font-size: 9px;
+
+  letter-spacing:
+    0.15em;
+
+  font-weight: 800;
+
+  color:
+    rgba(255,255,255,0.46);
+}
+
+.safebhoomi-location-status-title {
+  margin-top: 3px;
+
+  font-size: 15px;
+
+  font-weight: 850;
+}
+
+.safebhoomi-location-status-message {
+  margin-top: 12px;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+
+  color:
+    rgba(255,255,255,0.76);
+}
+
+.safebhoomi-location-status-location {
+  margin-top: 9px;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  color:
+    rgba(255,255,255,0.66);
+}
+
+.safebhoomi-location-status-location span {
+  color:
+    rgba(255,255,255,0.42);
+}
+
+.safebhoomi-location-status-score {
+  margin-top: 7px;
+
+  font-size: 9px;
+
+  color:
+    rgba(255,255,255,0.34);
+}
+
+@media (max-width: 700px) {
+
+  .safebhoomi-location-status {
+    left: 10px;
+    bottom: 15px;
+
+    width:
+      calc(100% - 20px);
+  }
+
+}
