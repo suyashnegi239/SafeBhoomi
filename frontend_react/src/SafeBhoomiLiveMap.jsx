@@ -1,5 +1,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Navigation, Search, Route } from "lucide-react";
+
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
