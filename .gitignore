@@ -7,3 +7,5 @@ frontend_react/dist/
 .ipynb_checkpoints/
 .DS_Store
 *.log
+*_before_*
+*.bak*
