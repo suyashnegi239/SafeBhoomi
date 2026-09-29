@@ -5,7 +5,6 @@ import SafeBhoomiEmergency from "./SafeBhoomiEmergency";
 import SafeBhoomiSimulation from "./SafeBhoomiSimulation";
 import {
 
-const SAFE_BASE_URL = import.meta.env.BASE_URL || "/";
   Activity, Map, ShieldAlert, Route, Brain, Radio,
   Menu, X, PhoneCall, CloudRain, Mountain, Play,
   RefreshCw, Navigation, Wifi, WifiOff
@@ -13,6 +12,7 @@ const SAFE_BASE_URL = import.meta.env.BASE_URL || "/";
 import "./index.css";
 import SafeBhoomiLiveMap from "./SafeBhoomiLiveMap";
 
+const SAFE_BASE_URL = import.meta.env.BASE_URL || "/";
 const districts = [
   ["Chamoli",55,"HIGH",73],["Rudraprayag",55,"HIGH",73],
   ["Uttarkashi",53,"HIGH",72],["Pithoragarh",52,"HIGH",71],
