@@ -1,38 +1,31 @@
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  GeoJSON,
-  CircleMarker,
-  Popup,
-  useMap
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useRef, useState } from "react";
+import * as maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
-const CENTER = [30.0668, 79.0193];
+const CENTER = [79.0193, 30.0668];
 
 const FALLBACK_DISTRICTS = [
-  ["Almora", 29.5971, 79.6591, 52],
-  ["Bageshwar", 29.8383, 79.7714, 66],
-  ["Chamoli", 30.4020, 79.3281, 77],
-  ["Champawat", 29.3362, 80.0910, 60],
-  ["Dehradun", 30.3165, 78.0322, 31],
-  ["Haridwar", 29.9457, 78.1642, 18],
-  ["Nainital", 29.3919, 79.4542, 68],
-  ["Pauri Garhwal", 30.1460, 78.7814, 61],
-  ["Pithoragarh", 29.5829, 80.2182, 71],
-  ["Rudraprayag", 30.2844, 78.9811, 73],
-  ["Tehri Garhwal", 30.3782, 78.4804, 60],
-  ["Udham Singh Nagar", 28.9745, 79.3925, 20],
-  ["Uttarkashi", 30.7268, 78.4354, 72]
+  ["Chamoli", 30.401, 79.320, 73, 85, 78, 5, 34, 82, 4],
+  ["Rudraprayag", 30.284, 78.981, 73, 72, 75, 4, 36, 79, 3],
+  ["Uttarkashi", 30.726, 78.435, 72, 68, 70, 3, 33, 76, 2],
+  ["Pithoragarh", 29.582, 80.219, 71, 65, 72, 3, 38, 80, 3],
+  ["Nainital", 29.391, 79.454, 68, 58, 67, 2, 31, 70, 2],
+  ["Bageshwar", 29.838, 79.771, 55, 45, 60, 1, 28, 62, 1],
+  ["Pauri Garhwal", 30.146, 78.781, 61, 42, 58, 1, 29, 65, 1],
+  ["Tehri Garhwal", 30.378, 78.480, 60, 40, 55, 1, 27, 61, 1],
+  ["Champawat", 29.333, 80.091, 57, 38, 52, 1, 26, 58, 1],
+  ["Almora", 29.598, 79.660, 45, 30, 48, 0, 23, 50, 0],
+  ["Dehradun", 30.316, 78.032, 31, 20, 42, 0, 18, 43, 0],
+  ["Haridwar", 29.945, 78.164, 18, 10, 35, 0, 8, 30, 0],
+  ["Udham Singh Nagar", 29.000, 79.500, 20, 12, 38, 0, 7, 32, 0],
 ];
 
 function riskColor(score) {
-  if (score >= 75) return "#ef4444";
-  if (score >= 60) return "#f97316";
+  if (score >= 75) return "#dc2626";
+  if (score >= 60) return "#ea580c";
   if (score >= 40) return "#eab308";
-  return "#22c55e";
+  return "#16a34a";
 }
 
 function riskName(score) {
@@ -42,533 +35,661 @@ function riskName(score) {
   return "LOW";
 }
 
-/* ---------------------------------------------------------
-   Convert raw measurements into simple human-readable words
---------------------------------------------------------- */
-
-function rainfallStatus(mm) {
-  if (mm >= 100) return "EXTREME";
-  if (mm >= 60) return "HEAVY";
-  if (mm >= 30) return "MODERATE";
-  if (mm > 0) return "LIGHT";
-  return "LOW";
+function normalizeDistrict(row) {
+  return {
+    district: row.district ?? row.name ?? row.District ?? "Unknown",
+    lat: Number(row.latitude ?? row.lat ?? row.Latitude ?? 0),
+    lon: Number(row.longitude ?? row.lon ?? row.Longitude ?? 0),
+    score: Number(row.risk_score ?? row.riskScore ?? row.score ?? 0),
+    rainfall: Number(row.rainfall_mm ?? row.Rainfall_mm ?? row.rainfall ?? 0),
+    humidity: Number(row.humidity_pct ?? row.Humidity_pct ?? row.humidity ?? 0),
+    landslides: Number(
+      row.recent_landslides ?? row.landslides ?? row.Recent_Landslides ?? 0
+    ),
+    slope: Number(row.slope_deg ?? row.slope ?? row.Slope_deg ?? 0),
+    soil: Number(
+      row.soil_saturation_pct ??
+        row.soil_saturation ??
+        row.Soil_Saturation_pct ??
+        0
+    ),
+    roads: Number(
+      row.road_blockages ??
+        row.blockages ??
+        row.Road_Blockages ??
+        0
+    ),
+  };
 }
 
-function soilStatus(percent) {
-  if (percent >= 85) return "SATURATED";
-  if (percent >= 65) return "WET";
-  if (percent >= 40) return "MOIST";
-  return "DRY";
-}
-
-function landslideStatus(count) {
-  if (count >= 5) return "ACTIVE";
-  if (count >= 2) return "WATCH";
-  if (count === 1) return "REPORTED";
-  return "QUIET";
-}
-
-function slopeStatus(degrees) {
-  if (degrees >= 35) return "STEEP";
-  if (degrees >= 25) return "SLOPED";
-  if (degrees >= 15) return "GENTLE";
-  return "FLAT";
-}
-
-function roadStatus(blockages) {
-  if (blockages >= 5) return "BLOCKED";
-  if (blockages >= 2) return "DISRUPTED";
-  if (blockages === 1) return "CAUTION";
-  return "OPEN";
-}
-
-function alertStatus(score, rainfall, landslides) {
-  if (score >= 75 || rainfall >= 100 || landslides >= 5) return "ACTIVE";
-  if (score >= 60 || rainfall >= 60 || landslides >= 2) return "WATCH";
-  return "CLEAR";
-}
-
-function weatherStatus(rainfall, humidity) {
-  if (rainfall >= 60) return "RAINY";
-  if (humidity >= 85) return "HUMID";
-  if (humidity >= 65) return "CLOUDY";
-  return "CLEAR";
-}
-
-function FitUttarakhand({ geo }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!geo) return;
-
-    try {
-      const layer = window.L.geoJSON(geo);
-      map.fitBounds(layer.getBounds(), {
-        padding: [25, 25],
-        maxZoom: 8
-      });
-    } catch {
-      map.setView(CENTER, 7);
-    }
-  }, [geo, map]);
-
-  return null;
-}
-
-function IntelligenceRow({ icon, label, value }) {
-  return (
-    <div className="intelRow">
-      <span className="intelIcon">{icon}</span>
-      <span className="intelLabel">{label}</span>
-      <strong>{value}</strong>
-    </div>
+function fallbackData() {
+  return FALLBACK_DISTRICTS.map(
+    ([district, lat, lon, score, rainfall, humidity, landslides, slope, soil, roads]) =>
+      ({
+        district,
+        lat,
+        lon,
+        score,
+        rainfall,
+        humidity,
+        landslides,
+        slope,
+        soil,
+        roads,
+      })
   );
 }
 
-export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
-  const [districts, setDistricts] = useState([]);
-  const [geo, setGeo] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const [showZones, setShowZones] = useState(true);
-  const [showDistricts, setShowDistricts] = useState(true);
-  const [showPulse, setShowPulse] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
-
-  const loadData = async () => {
-    setLoading(true);
-
-    try {
-      const d = await fetch("/SafeBhoomi/safebhoomi_districts.json")
-        .then(r => r.json());
-
-      setDistricts(
-        d.map(x => ({
-          name: x.district,
-          lat: Number(x.latitude),
-          lon: Number(x.longitude),
-          score: Number(x.risk_score || 0),
-          rainfall: Number(x.rainfall_mm || 0),
-          humidity: Number(x.humidity_pct || 0),
-          landslides: Number(x.recent_landslides || 0),
-          slope: Number(x.slope_deg || 0),
-          saturation: Number(x.soil_saturation_pct || 0),
-          blockages: Number(x.road_blockages || 0)
-        }))
-      );
-    } catch {
-      setDistricts(
-        FALLBACK_DISTRICTS.map(x => ({
-          name: x[0],
-          lat: x[1],
-          lon: x[2],
-          score: x[3],
-          rainfall: 0,
-          humidity: 0,
-          landslides: 0,
-          slope: 0,
-          saturation: 0,
-          blockages: 0
-        }))
-      );
-    }
-
-    try {
-      const g = await fetch("/SafeBhoomi/uttarakhand.geojson")
-        .then(r => r.json());
-
-      setGeo(g);
-    } catch (e) {
-      console.warn("Boundary unavailable", e);
-    }
-
-    setLastUpdate(new Date());
-    setLoading(false);
+function makePoints(districts) {
+  return {
+    type: "FeatureCollection",
+    features: districts.map((d) => ({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [d.lon, d.lat],
+      },
+      properties: {
+        district: d.district,
+        score: d.score,
+        risk: riskName(d.score),
+      },
+    })),
   };
+}
 
-  useEffect(() => {
-    loadData();
+function makeDistrictGeoJSON(geo, districts) {
+  if (!geo) return null;
 
-    const timer = setInterval(loadData, 60000);
+  const byName = new Map(
+    districts.map((d) => [String(d.district).toLowerCase(), d.score])
+  );
 
-    return () => clearInterval(timer);
-  }, []);
+  const features = (geo.features || []).map((feature) => {
+    const props = feature.properties || {};
 
-  const stats = useMemo(() => ({
-    critical: districts.filter(d => d.score >= 75).length,
-    high: districts.filter(d => d.score >= 60 && d.score < 75).length,
-    moderate: districts.filter(d => d.score >= 40 && d.score < 60).length,
-    low: districts.filter(d => d.score < 40).length
-  }), [districts]);
-
-  const districtStyle = feature => {
     const name =
-      feature?.properties?.district ||
-      feature?.properties?.DISTRICT ||
-      feature?.properties?.name ||
+      props.DISTRICT ??
+      props.district ??
+      props.District ??
+      props.NAME_2 ??
+      props.NAME_1 ??
+      props.name ??
       "";
 
-    const d = districts.find(
-      x => x.name.toLowerCase() === String(name).toLowerCase()
-    );
-
-    const score = d?.score || 0;
+    const score = byName.get(String(name).toLowerCase()) ?? 0;
 
     return {
-      color: "#dbeafe",
-      weight: 1.5,
-      fillColor: riskColor(score),
-      fillOpacity: showDistricts ? 0.42 : 0.08
+      ...feature,
+      properties: {
+        ...props,
+        safebhoomi_district: name,
+        safebhoomi_score: score,
+        safebhoomi_risk: riskName(score),
+      },
     };
+  });
+
+  return {
+    type: "FeatureCollection",
+    features,
   };
+}
 
-  const onEachDistrict = (feature, layer) => {
-    const name =
-      feature?.properties?.district ||
-      feature?.properties?.DISTRICT ||
-      feature?.properties?.name ||
-      "District";
+export default function SafeBhoomiLiveMap({ onDistrictSelect }) {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const animationRef = useRef(null);
 
-    const d = districts.find(
-      x => x.name.toLowerCase() === String(name).toLowerCase()
-    );
+  const [districts, setDistricts] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [showZones, setShowZones] = useState(true);
+  const [showPulse, setShowPulse] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    layer.bindTooltip(
-      `${name}${d ? ` • ${riskName(d.score)}` : ""}`,
-      { sticky: true }
-    );
+  useEffect(() => {
+    let cancelled = false;
 
-    layer.on({
-      mouseover: e => {
-        e.target.setStyle({
-          weight: 3,
-          fillOpacity: 0.65
-        });
-      },
+    async function loadData() {
+      try {
+        const response = await fetch("/SafeBhoomi/safebhoomi_districts.json");
 
-      mouseout: e => {
-        e.target.setStyle(districtStyle(feature));
-      },
-
-      click: () => {
-        if (d) {
-          setSelected(d);
-          onDistrictSelect?.(d.name);
+        if (!response.ok) {
+          throw new Error(`Dataset request failed: ${response.status}`);
         }
-      }
-    });
-  };
 
-  const selectedData = selected;
+        const json = await response.json();
+
+        const rows = Array.isArray(json)
+          ? json
+          : json.districts || json.data || [];
+
+        const normalized = rows
+          .map(normalizeDistrict)
+          .filter((d) => d.lat && d.lon && d.district);
+
+        if (!normalized.length) {
+          throw new Error("Dataset contained no usable district records.");
+        }
+
+        if (!cancelled) {
+          setDistricts(normalized);
+        }
+      } catch (err) {
+        console.warn("SafeBhoomi district dataset unavailable:", err);
+
+        if (!cancelled) {
+          setDistricts(fallbackData());
+          setError("Using local fallback district data.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current || loading || mapRef.current) return;
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+
+      // Clean OpenStreetMap raster basemap.
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: "raster",
+            tiles: [
+              "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            ],
+            tileSize: 256,
+            attribution: "© OpenStreetMap contributors",
+          },
+
+          terrain: {
+            type: "raster-dem",
+            tiles: [
+              "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+            ],
+            tileSize: 256,
+            encoding: "terrarium",
+            maxzoom: 15,
+          },
+        },
+
+        layers: [
+          {
+            id: "osm",
+            type: "raster",
+            source: "osm",
+          },
+        ],
+
+        terrain: {
+          source: "terrain",
+          exaggeration: 1.35,
+        },
+      },
+
+      center: CENTER,
+      zoom: 7.1,
+      pitch: 55,
+      bearing: 18,
+      minZoom: 5.5,
+      maxZoom: 15,
+      maxPitch: 75,
+      attributionControl: true,
+    });
+
+    map.addControl(
+      new maplibregl.NavigationControl({
+        visualizePitch: true,
+      }),
+      "top-right"
+    );
+
+    map.addControl(
+      new maplibregl.TerrainControl({
+        source: "terrain",
+        exaggeration: 1.35,
+      }),
+      "top-right"
+    );
+
+    map.on("load", () => {
+      mapRef.current = map;
+
+      // --------------------------------------------------------
+      // DISTRICT POINTS
+      // --------------------------------------------------------
+      map.addSource("safebhoomi-points", {
+        type: "geojson",
+        data: makePoints(districts),
+      });
+
+      // Main risk circles
+      map.addLayer({
+        id: "risk-circles",
+        type: "circle",
+        source: "safebhoomi-points",
+        paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["get", "score"],
+            0,
+            6,
+            40,
+            10,
+            60,
+            14,
+            75,
+            19,
+            100,
+            24,
+          ],
+          "circle-color": [
+            "case",
+            [">=", ["get", "score"], 75],
+            "#dc2626",
+            [">=", ["get", "score"], 60],
+            "#ea580c",
+            [">=", ["get", "score"], 40],
+            "#eab308",
+            "#16a34a",
+          ],
+          "circle-opacity": 0.78,
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2,
+          "circle-stroke-opacity": 0.9,
+        },
+      });
+
+      // Outer pulse layer
+      map.addLayer({
+        id: "hazard-pulse",
+        type: "circle",
+        source: "safebhoomi-points",
+        filter: [">=", ["get", "score"], 60],
+        paint: {
+          "circle-radius": 28,
+          "circle-color": [
+            "case",
+            [">=", ["get", "score"], 75],
+            "#dc2626",
+            "#ea580c",
+          ],
+          "circle-opacity": 0.10,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": [
+            "case",
+            [">=", ["get", "score"], 75],
+            "#dc2626",
+            "#ea580c",
+          ],
+          "circle-stroke-opacity": 0.28,
+        },
+      });
+
+      // District labels
+      map.addLayer({
+        id: "district-labels",
+        type: "symbol",
+        source: "safebhoomi-points",
+        layout: {
+          "text-field": [
+            "concat",
+            ["get", "district"],
+            "  ",
+            ["get", "risk"],
+          ],
+          "text-size": 11,
+          "text-offset": [0, 2.2],
+          "text-anchor": "top",
+          "text-allow-overlap": false,
+        },
+        paint: {
+          "text-color": "#0f172a",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2,
+        },
+      });
+
+      // Clickable districts
+      map.on("click", "risk-circles", (event) => {
+        const feature = event.features?.[0];
+
+        if (!feature) return;
+
+        const districtName = feature.properties?.district;
+
+        const district = districts.find(
+          (d) => d.district === districtName
+        );
+
+        if (!district) return;
+
+        setSelected(district);
+
+        if (onDistrictSelect) {
+          onDistrictSelect(district.district);
+        }
+
+        new maplibregl.Popup({
+          closeButton: true,
+          closeOnClick: true,
+        })
+          .setLngLat(event.lngLat)
+          .setHTML(`
+            <div style="min-width:210px;font-family:Inter,Arial,sans-serif">
+              <strong style="font-size:16px">${district.district}</strong>
+              <div style="margin-top:8px">
+                <b>Risk:</b>
+                <span style="color:${riskColor(district.score)}">
+                  ${riskName(district.score)}
+                </span>
+              </div>
+              <div><b>Risk score:</b> ${district.score}/100</div>
+              <div><b>Rainfall:</b> ${district.rainfall} mm</div>
+              <div><b>Soil saturation:</b> ${district.soil}%</div>
+              <div><b>Slope:</b> ${district.slope}°</div>
+              <div><b>Recent landslides:</b> ${district.landslides}</div>
+            </div>
+          `)
+          .addTo(map);
+      });
+
+      map.on("mouseenter", "risk-circles", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      map.on("mouseleave", "risk-circles", () => {
+        map.getCanvas().style.cursor = "";
+      });
+
+      // Slight cinematic initial movement.
+      map.easeTo({
+        pitch: 58,
+        bearing: 22,
+        duration: 1800,
+      });
+
+      // --------------------------------------------------------
+      // HAZARD PULSE ANIMATION
+      // --------------------------------------------------------
+      let pulse = 0;
+
+      const animatePulse = () => {
+        if (!map.getLayer("hazard-pulse")) {
+          animationRef.current = requestAnimationFrame(animatePulse);
+          return;
+        }
+
+        if (!showPulse) {
+          map.setPaintProperty(
+            "hazard-pulse",
+            "circle-opacity",
+            0
+          );
+        } else {
+          const wave = (Math.sin(pulse) + 1) / 2;
+
+          map.setPaintProperty(
+            "hazard-pulse",
+            "circle-radius",
+            24 + wave * 18
+          );
+
+          map.setPaintProperty(
+            "hazard-pulse",
+            "circle-opacity",
+            0.04 + wave * 0.12
+          );
+        }
+
+        pulse += 0.045;
+        animationRef.current = requestAnimationFrame(animatePulse);
+      };
+
+      animationRef.current = requestAnimationFrame(animatePulse);
+    });
+
+    map.on("error", (event) => {
+      console.warn("MapLibre error:", event?.error || event);
+    });
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [loading, districts, onDistrictSelect]);
+
+  // Toggle district risk zones.
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !map.getLayer("risk-circles")) return;
+
+    map.setLayoutProperty(
+      "risk-circles",
+      "visibility",
+      showZones ? "visible" : "none"
+    );
+
+    map.setLayoutProperty(
+      "district-labels",
+      "visibility",
+      showZones ? "visible" : "none"
+    );
+  }, [showZones]);
+
+  // Toggle hazard pulse.
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !map.getLayer("hazard-pulse")) return;
+
+    map.setPaintProperty(
+      "hazard-pulse",
+      "circle-opacity",
+      showPulse ? 0.12 : 0
+    );
+  }, [showPulse]);
+
+  const stats = {
+    critical: districts.filter((d) => d.score >= 75).length,
+    high: districts.filter((d) => d.score >= 60 && d.score < 75).length,
+    moderate: districts.filter((d) => d.score >= 40 && d.score < 60).length,
+    low: districts.filter((d) => d.score < 40).length,
+  };
 
   return (
-    <div className="safeBhoomiMapPage">
-
-      <div className="mapHeader">
+    <section className="safeBhoomiMapPage">
+      <div className="safeBhoomiMapHeader">
         <div>
-          <div className="mapEyebrow">
-            SAFEBHOOMI • TERRAIN INTELLIGENCE
-          </div>
-
-          <h1>Uttarakhand Live Hazard Map</h1>
-
+          <div className="eyebrow">SAFEBHOOMI • TERRAIN INTELLIGENCE</div>
+          <h1>Uttarakhand 3D Hazard Map</h1>
           <p>
-            Click any district to inspect live hazard intelligence
+            Explore terrain, district risk zones and hazard intelligence
+            across Uttarakhand.
           </p>
         </div>
 
-        <div className="mapLiveStatus">
-          <span className="liveDot"></span>
+        <div className="mapLiveBadge">
+          <span className="liveDot" />
           LIVE MONITORING
         </div>
       </div>
 
-      <div className="riskStats">
-        <div>
-          <strong>{districts.length}</strong>
-          <span>Districts</span>
-        </div>
+      <div className="safeBhoomiMapToolbar">
+        <button
+          type="button"
+          className={showZones ? "mapTool active" : "mapTool"}
+          onClick={() => setShowZones((value) => !value)}
+        >
+          {showZones ? "Hide Risk Zones" : "Show Risk Zones"}
+        </button>
 
-        <div className="critical">
+        <button
+          type="button"
+          className={showPulse ? "mapTool active" : "mapTool"}
+          onClick={() => setShowPulse((value) => !value)}
+        >
+          {showPulse ? "Hazard Pulse On" : "Hazard Pulse Off"}
+        </button>
+
+        <button
+          type="button"
+          className="mapTool"
+          onClick={() => {
+            const map = mapRef.current;
+
+            if (!map) return;
+
+            map.flyTo({
+              center: CENTER,
+              zoom: 7.1,
+              pitch: 58,
+              bearing: 22,
+              duration: 1200,
+            });
+          }}
+        >
+          Reset Terrain
+        </button>
+      </div>
+
+      <div className="safeBhoomiMapStats">
+        <div className="mapStat critical">
           <strong>{stats.critical}</strong>
           <span>Critical</span>
         </div>
 
-        <div className="high">
+        <div className="mapStat high">
           <strong>{stats.high}</strong>
           <span>High</span>
         </div>
 
-        <div className="moderate">
+        <div className="mapStat moderate">
           <strong>{stats.moderate}</strong>
           <span>Moderate</span>
         </div>
 
-        <div className="low">
+        <div className="mapStat low">
           <strong>{stats.low}</strong>
           <span>Low</span>
         </div>
       </div>
 
-      <div className="mapToolbar">
+      {error && (
+        <div className="mapDataNotice">
+          {error}
+        </div>
+      )}
 
-        <button onClick={() => setShowZones(v => !v)}>
-          {showZones ? "● Risk Zones" : "○ Risk Zones"}
-        </button>
-
-        <button onClick={() => setShowDistricts(v => !v)}>
-          {showDistricts ? "● District Fill" : "○ District Fill"}
-        </button>
-
-        <button onClick={() => setShowPulse(v => !v)}>
-          {showPulse ? "● Hazard Pulse" : "○ Hazard Pulse"}
-        </button>
-
-        <button onClick={loadData}>
-          ↻ Refresh
-        </button>
-
-        <span className="mapUpdated">
-          Updated {lastUpdate.toLocaleTimeString()}
-        </span>
-
-      </div>
-
-      <div className="mapMain">
-
-        <MapContainer
-          center={CENTER}
-          zoom={7}
-          minZoom={6}
-          maxZoom={11}
-          scrollWheelZoom={true}
-          className="safeBhoomiLeaflet"
-        >
-
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-          <FitUttarakhand geo={geo} />
-
-          {geo && (
-            <GeoJSON
-              data={geo}
-              style={districtStyle}
-              onEachFeature={onEachDistrict}
-            />
-          )}
-
-          {showZones &&
-            districts.map(d => (
-              <CircleMarker
-                key={d.name}
-                center={[d.lat, d.lon]}
-                radius={Math.max(
-                  8,
-                  Math.min(25, 7 + d.score / 5)
-                )}
-                pathOptions={{
-                  color: riskColor(d.score),
-                  fillColor: riskColor(d.score),
-                  fillOpacity: 0.25,
-                  weight: 2,
-                  className:
-                    showPulse && d.score >= 60
-                      ? "hazardPulse"
-                      : ""
-                }}
-                eventHandlers={{
-                  click: () => {
-                    setSelected(d);
-                    onDistrictSelect?.(d.name);
-                  }
-                }}
-              >
-
-                <Popup>
-                  <div className="riskPopup">
-
-                    <div className="popupTitle">
-                      {d.name}
-                    </div>
-
-                    <div
-                      className="popupRisk"
-                      style={{
-                        color: riskColor(d.score)
-                      }}
-                    >
-                      {riskName(d.score)}
-                    </div>
-
-                    <div className="popupQuickGrid">
-
-                      <span>Rain</span>
-                      <b>{rainfallStatus(d.rainfall)}</b>
-
-                      <span>Soil</span>
-                      <b>{soilStatus(d.saturation)}</b>
-
-                      <span>Landslide</span>
-                      <b>{landslideStatus(d.landslides)}</b>
-
-                      <span>Road</span>
-                      <b>{roadStatus(d.blockages)}</b>
-
-                    </div>
-
-                    <button
-                      className="popupButton"
-                      onClick={() =>
-                        onDistrictSelect?.(d.name)
-                      }
-                    >
-                      Open District Analysis →
-                    </button>
-
-                  </div>
-                </Popup>
-
-              </CircleMarker>
-            ))
-          }
-
-        </MapContainer>
-
-        {selectedData && (
-          <div className="mapSidePanel">
-
-            <button
-              className="closePanel"
-              onClick={() => setSelected(null)}
-            >
-              ×
-            </button>
-
-            <div className="panelLabel">
-              SELECTED DISTRICT
-            </div>
-
-            <h2>{selectedData.name}</h2>
-
-            <div
-              className="panelRisk"
-              style={{
-                color: riskColor(selectedData.score)
-              }}
-            >
-              {riskName(selectedData.score)}
-              <strong>{selectedData.score}</strong>
-            </div>
-
-            <div className="intelligenceTitle">
-              QUICK INTELLIGENCE
-            </div>
-
-            <div className="intelligenceGrid">
-
-              <IntelligenceRow
-                icon="🌧"
-                label="Rainfall"
-                value={rainfallStatus(selectedData.rainfall)}
-              />
-
-              <IntelligenceRow
-                icon="💧"
-                label="Soil"
-                value={soilStatus(selectedData.saturation)}
-              />
-
-              <IntelligenceRow
-                icon="⛰"
-                label="Landslides"
-                value={landslideStatus(selectedData.landslides)}
-              />
-
-              <IntelligenceRow
-                icon="📐"
-                label="Slope"
-                value={slopeStatus(selectedData.slope)}
-              />
-
-              <IntelligenceRow
-                icon="🛣"
-                label="Roads"
-                value={roadStatus(selectedData.blockages)}
-              />
-
-              <IntelligenceRow
-                icon="☁"
-                label="Weather"
-                value={weatherStatus(
-                  selectedData.rainfall,
-                  selectedData.humidity
-                )}
-              />
-
-              <IntelligenceRow
-                icon="⚠"
-                label="Alert"
-                value={alertStatus(
-                  selectedData.score,
-                  selectedData.rainfall,
-                  selectedData.landslides
-                )}
-              />
-
-            </div>
-
-            <button
-              className="openDistrict"
-              onClick={() =>
-                onDistrictSelect?.(selectedData.name)
-              }
-            >
-              View Full Area Risk →
-            </button>
-
+      <div className="safeBhoomiMapShell">
+        {loading && (
+          <div className="mapLoading">
+            <div className="mapLoadingSpinner" />
+            <strong>Loading terrain intelligence…</strong>
+            <span>Preparing Uttarakhand hazard data</span>
           </div>
         )}
 
+        <div
+          ref={containerRef}
+          className="safeBhoomiMapCanvas"
+          aria-label="SafeBhoomi 3D Uttarakhand hazard map"
+        />
+
+        {selected && (
+          <aside className="mapIntelPanel">
+            <div className="mapIntelEyebrow">SELECTED DISTRICT</div>
+
+            <h2>{selected.district}</h2>
+
+            <div
+              className="mapRiskBadge"
+              style={{
+                color: riskColor(selected.score),
+                borderColor: riskColor(selected.score),
+              }}
+            >
+              {riskName(selected.score)} · {selected.score}/100
+            </div>
+
+            <div className="mapIntelGrid">
+              <div>
+                <span>Rainfall</span>
+                <strong>{selected.rainfall} mm</strong>
+              </div>
+
+              <div>
+                <span>Humidity</span>
+                <strong>{selected.humidity}%</strong>
+              </div>
+
+              <div>
+                <span>Soil</span>
+                <strong>{selected.soil}%</strong>
+              </div>
+
+              <div>
+                <span>Slope</span>
+                <strong>{selected.slope}°</strong>
+              </div>
+
+              <div>
+                <span>Landslides</span>
+                <strong>{selected.landslides}</strong>
+              </div>
+
+              <div>
+                <span>Road Blockages</span>
+                <strong>{selected.roads}</strong>
+              </div>
+            </div>
+          </aside>
+        )}
       </div>
 
-      <div className="mapLegendNew">
-
+      <div className="safeBhoomiMapLegend">
         <span>
-          <i className="legendCritical"></i>
+          <i style={{ background: "#dc2626" }} />
           Critical
         </span>
 
         <span>
-          <i className="legendHigh"></i>
+          <i style={{ background: "#ea580c" }} />
           High
         </span>
 
         <span>
-          <i className="legendModerate"></i>
+          <i style={{ background: "#eab308" }} />
           Moderate
         </span>
 
         <span>
-          <i className="legendLow"></i>
+          <i style={{ background: "#16a34a" }} />
           Low
         </span>
 
-        <small>
-          Click a district or hazard zone for quick intelligence.
-        </small>
-
+        <span className="terrainHint">
+          🏔 Drag to rotate • Scroll to zoom • Terrain control for 3D elevation
+        </span>
       </div>
-
-      {loading && (
-        <div className="mapLoading">
-          <div className="loaderRing"></div>
-          Loading Uttarakhand terrain intelligence…
-        </div>
-      )}
-
-    </div>
+    </section>
   );
 }

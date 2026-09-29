@@ -63,6 +63,63 @@ const analyzeWithAI = async () => {
   setAiAnswer("");
 
   try {
+    // Build context ONLY from real SafeBhoomi risk data.
+    // Missing values remain null.
+    const aiContext = {
+      district:
+        riskData?.district ||
+        riskData?.area ||
+        selectedDistrict?.name ||
+        selected ||
+        "Selected district",
+
+      risk:
+        riskData?.risk_level ||
+        riskData?.risk ||
+        riskData?.classification ||
+        riskData?.level ||
+        "UNKNOWN",
+
+      rainfall_24h_mm:
+        riskData?.inputs?.rainfall_24h_mm ?? null,
+
+      rainfall_7d_mm:
+        riskData?.inputs?.rainfall_7d_mm ?? null,
+
+      slope_deg:
+        riskData?.terrain?.slope_deg ?? null,
+
+      elevation_m:
+        riskData?.terrain?.elevation_m ?? null,
+
+      soil_saturation:
+        riskData?.soil?.saturation ??
+        riskData?.inputs?.soil_saturation ??
+        null,
+
+      recent_landslides:
+        riskData?.recent_landslides ??
+        riskData?.hazards?.recent_landslides ??
+        riskData?.landslides?.recent ??
+        null,
+
+      road_blockages:
+        riskData?.road_blockages ??
+        riskData?.hazards?.road_blockages ??
+        riskData?.roads?.blockages ??
+        null,
+
+      historical_susceptibility:
+        riskData?.historical_susceptibility ??
+        riskData?.susceptibility?.historical ??
+        null
+    };
+
+    console.log(
+      "SafeBhoomi AI context:",
+      aiContext
+    );
+
     const response = await fetch(
       `${import.meta.env.VITE_API_BASE || ""}/api/ai/analyze`,
       {
@@ -72,26 +129,41 @@ const analyzeWithAI = async () => {
         },
         body: JSON.stringify({
           question: aiQuestion,
-          district: selected
+          context: aiContext,
+          district: aiContext.district,
+          risk: aiContext.risk
         })
       }
     );
 
     const data = await response.json();
 
-    if (!response.ok || !data.success) {
+    if (!response.ok) {
       throw new Error(
-        data.error || `AI service returned ${response.status}`
+        data.error ||
+        `AI service returned ${response.status}`
+      );
+    }
+
+    if (!data.answer) {
+      throw new Error(
+        "AI Analyst returned no answer."
       );
     }
 
     setAiAnswer(data.answer);
 
   } catch (error) {
-    console.error("AI Analyst error:", error);
+    console.error(
+      "AI Analyst error:",
+      error
+    );
+
     setAiError(
+      error.message ||
       "AI Analyst is temporarily unavailable. Please try again."
     );
+
   } finally {
     setAiLoading(false);
   }
@@ -401,196 +473,194 @@ const analyzeWithAI = async () => {
             )}
 
             {riskData && (
-  <>
-    <div className="riskMain">
+              <>
+                <div className="riskMain">
 
-      <div className="riskScore">
-        <small>MODELLED RISK SCORE</small>
+                  <div className="riskScore">
+                    <small>MODELLED RISK SCORE</small>
 
-        <strong>
-          {riskData.risk?.score ?? "—"}%
-        </strong>
+                    <strong>
+                      {riskData.risk?.score ?? "—"}%
+                    </strong>
 
-        <span>
-          {riskData.risk?.level ?? "UNKNOWN"}
-        </span>
+                    <span>
+                      {riskData.risk?.level ?? "UNKNOWN"}
+                    </span>
 
-        <small>
-          {riskData.district}
-        </small>
-      </div>
+                    <small>
+                      {riskData.district}
+                    </small>
+                  </div>
 
-      <div className="riskFactors">
+                  <div className="riskFactors">
 
-        <Factor
-          name="24h Rainfall"
-          value={
-            riskData.inputs?.rainfall_24h_mm != null
-              ? `${riskData.inputs.rainfall_24h_mm} mm`
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="24h Rainfall"
+                      value={
+                        riskData.inputs?.rainfall_24h_mm != null
+                          ? `${riskData.inputs.rainfall_24h_mm} mm`
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="7-Day Rainfall"
-          value={
-            riskData.inputs?.rainfall_7d_mm != null
-              ? `${riskData.inputs.rainfall_7d_mm} mm`
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="7-Day Rainfall"
+                      value={
+                        riskData.inputs?.rainfall_7d_mm != null
+                          ? `${riskData.inputs.rainfall_7d_mm} mm`
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Humidity"
-          value={
-            riskData.inputs?.humidity_percent != null
-              ? `${riskData.inputs.humidity_percent}%`
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="Humidity"
+                      value={
+                        riskData.inputs?.humidity_percent != null
+                          ? `${riskData.inputs.humidity_percent}%`
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Soil Saturation"
-          value={
-            riskData.inputs?.soil_saturation_percent != null
-              ? `${riskData.inputs.soil_saturation_percent}%`
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="Soil Saturation"
+                      value={
+                        riskData.inputs?.soil_saturation_percent != null
+                          ? `${riskData.inputs.soil_saturation_percent}%`
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Slope"
-          value={
-            riskData.terrain?.slope_deg != null
-              ? `${riskData.terrain.slope_deg}°`
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="Slope"
+                      value={
+                        riskData.terrain?.slope_deg != null
+                          ? `${riskData.terrain.slope_deg}°`
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Elevation"
-          value={
-            riskData.terrain?.elevation_m != null
-              ? `${riskData.terrain.elevation_m} m`
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="Elevation"
+                      value={
+                        riskData.terrain?.elevation_m != null
+                          ? `${riskData.terrain.elevation_m} m`
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Recent Landslides"
-          value={
-            riskData.inputs?.recent_landslides != null
-              ? String(riskData.inputs.recent_landslides)
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="Recent Landslides"
+                      value={
+                        riskData.inputs?.recent_landslides != null
+                          ? String(riskData.inputs.recent_landslides)
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Road Blockages"
-          value={
-            riskData.inputs?.road_blockages != null
-              ? String(riskData.inputs.road_blockages)
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="Road Blockages"
+                      value={
+                        riskData.inputs?.road_blockages != null
+                          ? String(riskData.inputs.road_blockages)
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Historical Susceptibility"
-          value={
-            riskData.inputs?.historical_susceptibility != null
-              ? `${Math.round(
-                  riskData.inputs.historical_susceptibility * 100
-                )}%`
-              : "Unavailable"
-          }
-        />
+                    <Factor
+                      name="Historical Susceptibility"
+                      value={
+                        riskData.inputs?.historical_susceptibility != null
+                          ? `${Math.round(
+                              riskData.inputs.historical_susceptibility * 100
+                            )}%`
+                          : "Unavailable"
+                      }
+                    />
 
-        <Factor
-          name="Historical Landslides"
-          value={
-            riskData.historical?.historical_landslides != null
-              ? String(riskData.historical.historical_landslides)
-              : "Not imported"
-          }
-        />
+                    <Factor
+                      name="Historical Landslides"
+                      value={
+                        riskData.historical?.historical_landslides != null
+                          ? String(riskData.historical.historical_landslides)
+                          : "Not imported"
+                      }
+                    />
 
-      </div>
-    </div>
+                  </div>
+                </div>
 
-    <div className="riskDrivers">
+                <div className="riskDrivers">
 
-      <div className="sectionTitle">
-        <div>
-          <span>WHY THIS SCORE</span>
-          <h2>Risk Drivers</h2>
-        </div>
-      </div>
+                  <div className="sectionTitle">
+                    <div>
+                      <span>WHY THIS SCORE</span>
+                      <h2>Risk Drivers</h2>
+                    </div>
+                  </div>
 
-      <div className="driverGrid">
-        {Array.isArray(riskData.risk_drivers) &&
-          riskData.risk_drivers.map((driver, index) => (
-            <div className="driverCard" key={index}>
-              <ShieldAlert size={18}/>
-              <span>{driver}</span>
-            </div>
-          ))
-        }
-      </div>
+                  <div className="driverGrid">
+                    {Array.isArray(riskData.risk_drivers) &&
+                      riskData.risk_drivers.map((driver, index) => (
+                        <div className="driverCard" key={index}>
+                          <ShieldAlert size={18} />
+                          <span>{driver}</span>
+                        </div>
+                      ))}
+                  </div>
 
-    </div>
+                </div>
 
-    <div className="dataStatus">
+                <div className="dataStatus">
 
-      <span>
-        TERRAIN: {riskData.data_status?.terrain || "UNKNOWN"}
-      </span>
+                  <span>
+                    TERRAIN: {riskData.data_status?.terrain || "UNKNOWN"}
+                  </span>
 
-      <span>
-        RAINFALL: {riskData.data_status?.rainfall || "UNKNOWN"}
-      </span>
+                  <span>
+                    RAINFALL: {riskData.data_status?.rainfall || "UNKNOWN"}
+                  </span>
 
-      <span>
-        SOIL: {riskData.data_status?.soil || "UNKNOWN"}
-      </span>
+                  <span>
+                    SOIL: {riskData.data_status?.soil || "UNKNOWN"}
+                  </span>
 
-      <span>
-        SUSCEPTIBILITY: {
-          riskData.data_status?.historical_susceptibility || "UNKNOWN"
-        }
-      </span>
+                  <span>
+                    SUSCEPTIBILITY: {
+                      riskData.data_status?.historical_susceptibility || "UNKNOWN"
+                    }
+                  </span>
 
-      <span>
-        LANDSLIDES: {
-          riskData.data_status?.recent_landslides || "UNKNOWN"
-        }
-      </span>
+                  <span>
+                    LANDSLIDES: {
+                      riskData.data_status?.recent_landslides || "UNKNOWN"
+                    }
+                  </span>
 
-      <span>
-        ROADS: {
-          riskData.data_status?.road_blockages || "UNKNOWN"
-        }
-      </span>
+                  <span>
+                    ROADS: {
+                      riskData.data_status?.road_blockages || "UNKNOWN"
+                    }
+                  </span>
 
-      <span>
-        HISTORICAL INVENTORY: {
-          riskData.data_status?.historical_landslides || "UNKNOWN"
-        }
-      </span>
+                  <span>
+                    HISTORICAL INVENTORY: {
+                      riskData.data_status?.historical_landslides || "UNKNOWN"
+                    }
+                  </span>
 
-    </div>
+                </div>
 
-    <div className="riskDisclaimer">
-      <span>MODEL STATUS</span>
+                <div className="riskDisclaimer">
+                  <span>MODEL STATUS</span>
 
-      <p>
-        Risk score is a SafeBhoomi modelled indicator based on
-        available rainfall, terrain, soil and susceptibility data.
-        It is not an official government warning.
-      </p>
-    </div>
-
-  </>
-)}
+                  <p>
+                    Risk score is a SafeBhoomi modelled indicator based on
+                    available rainfall, terrain, soil and susceptibility data.
+                    It is not an official government warning.
+                  </p>
+                </div>
+              </>
+            )}
 
             {!riskData && !riskLoading && !riskError && (
               <div className="emptyRisk">

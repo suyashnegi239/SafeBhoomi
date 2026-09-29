@@ -3055,3 +3055,714 @@ footer{border-top:1px solid #1c2c26;padding:22px 5%;display:flex;justify-content
     grid-template-columns: 1fr;
   }
 }
+
+
+
+/* ============================================================
+   SAFEBHOOMI — LIGHT MONITORING THEME
+   Added as an override layer.
+   Existing functionality/layout remains unchanged.
+   ============================================================ */
+
+:root {
+  --sb-bg: #f3f7fb;
+  --sb-bg-soft: #eaf2f8;
+  --sb-card: #ffffff;
+  --sb-card-hover: #f8fbfd;
+  --sb-border: #d9e4ec;
+  --sb-border-strong: #c5d5e1;
+  --sb-text: #102a43;
+  --sb-text-soft: #526b7a;
+  --sb-text-muted: #718596;
+  --sb-primary: #176b87;
+  --sb-primary-light: #e4f2f7;
+  --sb-green: #198754;
+  --sb-green-light: #e7f6ee;
+  --sb-warning: #c77d00;
+  --sb-warning-light: #fff4dc;
+  --sb-danger: #c0392b;
+  --sb-danger-light: #fdebea;
+  --sb-shadow: 0 8px 28px rgba(16, 42, 67, 0.08);
+}
+
+/* Global */
+html,
+body {
+  background: var(--sb-bg) !important;
+  color: var(--sb-text) !important;
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* Main application */
+.app {
+  min-height: 100vh !important;
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(207, 232, 243, 0.75) 0%,
+      rgba(243, 247, 251, 0) 38%
+    ),
+    var(--sb-bg) !important;
+  color: var(--sb-text) !important;
+}
+
+/* Top navigation */
+.topbar {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid var(--sb-border) !important;
+  box-shadow: 0 2px 12px rgba(16, 42, 67, 0.05);
+  color: var(--sb-text) !important;
+}
+
+.brandMark {
+  background: var(--sb-primary-light) !important;
+  border-color: #8fc3d4 !important;
+  color: var(--sb-primary) !important;
+}
+
+.brandName {
+  color: var(--sb-text) !important;
+}
+
+.brandName span {
+  color: var(--sb-primary) !important;
+}
+
+.brandSub,
+.live {
+  color: var(--sb-text-muted) !important;
+}
+
+/* Navigation buttons / links */
+button {
+  color: inherit;
+}
+
+.navItem,
+.navButton,
+button {
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Cards */
+.card,
+.panel,
+.dashboardCard,
+.riskCard,
+.statCard,
+.factorCard,
+.driverCard,
+.districtCard,
+.infoCard {
+  background: var(--sb-card) !important;
+  border-color: var(--sb-border) !important;
+  box-shadow: var(--sb-shadow);
+  color: var(--sb-text) !important;
+}
+
+.card:hover,
+.panel:hover,
+.dashboardCard:hover,
+.statCard:hover,
+.factorCard:hover,
+.driverCard:hover,
+.districtCard:hover,
+.infoCard:hover {
+  background: var(--sb-card-hover) !important;
+}
+
+/* Main headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--sb-text);
+}
+
+p {
+  color: var(--sb-text-soft);
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: var(--sb-text) !important;
+  border-color: var(--sb-border-strong) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8a9aa7 !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--sb-primary) !important;
+  outline-color: rgba(23, 107, 135, 0.18) !important;
+}
+
+/* Area Risk */
+.riskMain,
+.riskFactors,
+.riskDrivers,
+.dataStatus,
+.riskDisclaimer {
+  color: var(--sb-text);
+}
+
+.riskScore {
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #edf7fa 100%
+    ) !important;
+  border-color: #c8e0e8 !important;
+  box-shadow: var(--sb-shadow);
+}
+
+.riskScore strong {
+  color: var(--sb-text) !important;
+}
+
+.riskScore small {
+  color: var(--sb-text-muted) !important;
+}
+
+.riskFactors {
+  background: transparent;
+}
+
+.riskDrivers {
+  background: transparent;
+}
+
+.driverCard {
+  background: #ffffff !important;
+  border: 1px solid var(--sb-border) !important;
+}
+
+.driverCard svg {
+  color: var(--sb-primary) !important;
+}
+
+.sectionTitle span {
+  color: var(--sb-primary) !important;
+}
+
+.sectionTitle h2 {
+  color: var(--sb-text) !important;
+}
+
+/* Data status strip */
+.dataStatus {
+  background: #ffffff !important;
+  border: 1px solid var(--sb-border) !important;
+  color: var(--sb-text-soft) !important;
+  box-shadow: 0 4px 16px rgba(16, 42, 67, 0.05);
+}
+
+/* Model disclaimer */
+.riskDisclaimer {
+  background: #f7fafc !important;
+  border: 1px solid var(--sb-border) !important;
+}
+
+.riskDisclaimer span {
+  color: var(--sb-primary) !important;
+}
+
+.riskDisclaimer p {
+  color: var(--sb-text-muted) !important;
+}
+
+/* Empty Area Risk state */
+.emptyRisk {
+  background: #ffffff !important;
+  border: 1px dashed var(--sb-border-strong) !important;
+  color: var(--sb-text) !important;
+  box-shadow: var(--sb-shadow);
+}
+
+.emptyRisk svg {
+  color: var(--sb-primary) !important;
+}
+
+.emptyRisk p {
+  color: var(--sb-text-soft) !important;
+}
+
+/* Risk semantics */
+.risk-low,
+.low,
+.safe {
+  color: var(--sb-green) !important;
+  background: var(--sb-green-light) !important;
+}
+
+.risk-medium,
+.medium,
+.moderate {
+  color: var(--sb-warning) !important;
+  background: var(--sb-warning-light) !important;
+}
+
+.risk-high,
+.high,
+.danger {
+  color: var(--sb-danger) !important;
+  background: var(--sb-danger-light) !important;
+}
+
+/* Tables */
+table {
+  background: #ffffff !important;
+  color: var(--sb-text) !important;
+  border-color: var(--sb-border) !important;
+}
+
+th {
+  background: #eef5f8 !important;
+  color: var(--sb-text) !important;
+}
+
+td {
+  border-color: var(--sb-border) !important;
+  color: var(--sb-text-soft) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #edf3f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bfd0da;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9db5c2;
+}
+
+
+
+/* SAFEBHOOMI 3D MAP STYLES */
+
+.safeBhoomiMapPage {
+  width: 100%;
+  min-height: 100%;
+}
+
+.safeBhoomiMapHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.safeBhoomiMapHeader h1 {
+  margin: 5px 0 6px;
+  color: #0f172a;
+  font-size: clamp(25px, 3vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.safeBhoomiMapHeader p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.safeBhoomiMapHeader .eyebrow {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.mapLiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 9px 13px;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+  animation: safeBhoomiLiveDot 1.6s ease-in-out infinite;
+}
+
+@keyframes safeBhoomiLiveDot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(0.75);
+  }
+}
+
+.safeBhoomiMapToolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mapTool {
+  appearance: none;
+  border: 1px solid #dbe3ee;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #334155;
+  padding: 9px 13px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mapTool:hover {
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
+}
+
+.mapTool.active {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.safeBhoomiMapStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.mapStat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 54px;
+  padding: 10px 13px;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #ffffff;
+}
+
+.mapStat strong {
+  color: #0f172a;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.mapStat span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mapStat.critical {
+  border-left: 4px solid #dc2626;
+}
+
+.mapStat.high {
+  border-left: 4px solid #ea580c;
+}
+
+.mapStat.moderate {
+  border-left: 4px solid #eab308;
+}
+
+.mapStat.low {
+  border-left: 4px solid #16a34a;
+}
+
+.mapDataNotice {
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  border: 1px solid #fde68a;
+  border-radius: 9px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.safeBhoomiMapShell {
+  position: relative;
+  width: 100%;
+  min-height: 610px;
+  overflow: hidden;
+  border: 1px solid #dbe3ee;
+  border-radius: 16px;
+  background: #dbeafe;
+  box-shadow:
+    0 12px 35px rgba(15, 23, 42, 0.10),
+    0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.safeBhoomiMapCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 610px;
+}
+
+.safeBhoomiMapCanvas .maplibregl-map {
+  width: 100%;
+  height: 100%;
+  min-height: 610px;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.safeBhoomiMapCanvas .maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+
+.safeBhoomiMapCanvas .maplibregl-ctrl button {
+  width: 34px;
+  height: 34px;
+}
+
+.safeBhoomiMapCanvas .maplibregl-ctrl-attrib {
+  border-radius: 5px 0 0 0;
+  background: rgba(255, 255, 255, 0.88);
+  color: #475569;
+  font-size: 9px;
+}
+
+.mapLoading {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: rgba(248, 250, 252, 0.94);
+  color: #0f172a;
+  backdrop-filter: blur(4px);
+}
+
+.mapLoading strong {
+  font-size: 14px;
+}
+
+.mapLoading span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.mapLoadingSpinner {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 5px;
+  border: 3px solid #dbeafe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: safeBhoomiMapSpin 800ms linear infinite;
+}
+
+@keyframes safeBhoomiMapSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mapIntelPanel {
+  position: absolute;
+  z-index: 10;
+  top: 16px;
+  left: 16px;
+  width: min(300px, calc(100% - 32px));
+  padding: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.mapIntelEyebrow {
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.mapIntelPanel h2 {
+  margin: 4px 0 8px;
+  color: #0f172a;
+  font-size: 22px;
+}
+
+.mapRiskBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 9px;
+  border: 1px solid;
+  border-radius: 7px;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.mapIntelGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.mapIntelGrid > div {
+  padding: 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.mapIntelGrid span {
+  display: block;
+  margin-bottom: 3px;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.mapIntelGrid strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.safeBhoomiMapLegend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 11px 2px 0;
+  color: #475569;
+  font-size: 11px;
+}
+
+.safeBhoomiMapLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.safeBhoomiMapLegend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.safeBhoomiMapLegend .terrainHint {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.maplibregl-popup-content {
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+}
+
+.maplibregl-popup-close-button {
+  color: #64748b;
+  font-size: 18px;
+}
+
+@media (max-width: 800px) {
+  .safeBhoomiMapHeader {
+    flex-direction: column;
+  }
+
+  .safeBhoomiMapStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .safeBhoomiMapShell,
+  .safeBhoomiMapCanvas,
+  .safeBhoomiMapCanvas .maplibregl-map {
+    min-height: 520px;
+  }
+
+  .safeBhoomiMapLegend .terrainHint {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .safeBhoomiMapStats {
+    grid-template-columns: 1fr;
+  }
+
+  .safeBhoomiMapShell,
+  .safeBhoomiMapCanvas,
+  .safeBhoomiMapCanvas .maplibregl-map {
+    min-height: 460px;
+  }
+
+  .mapIntelPanel {
+    top: 10px;
+    left: 10px;
+    width: calc(100% - 20px);
+  }
+}
+
