@@ -1,4 +1,4 @@
-name: Deploy SafeBhoomi to GitHub Pages
+name: Deploy SafeBhoomi
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -38,10 +38,19 @@ jobs:
         working-directory: frontend_react
         run: npm run build
 
-      - name: Setup Pages
+      - name: Verify production files
+        working-directory: frontend_react
+        run: |
+          test -f dist/index.html
+          test -d dist/assets
+          echo "✅ dist/index.html exists"
+          echo "✅ dist/assets exists"
+          find dist -maxdepth 2 -type f | head -30
+
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Pages artifact
+      - name: Upload SafeBhoomi artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: frontend_react/dist
@@ -55,6 +64,6 @@ jobs:
     needs: build
 
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy SafeBhoomi
         id: deployment
         uses: actions/deploy-pages@v4
