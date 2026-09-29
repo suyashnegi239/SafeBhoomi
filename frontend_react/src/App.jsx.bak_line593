@@ -590,7 +590,7 @@ const analyzeWithAI = async () => {
     </div>
 
   </>
-)}
+)}}
 
             {!riskData && !riskLoading && !riskError && (
               <div className="emptyRisk">
